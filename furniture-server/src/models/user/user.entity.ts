@@ -1,6 +1,7 @@
-import { Entity, Column } from 'typeorm';
+import { Entity, Column, OneToMany } from 'typeorm';
 
 import { AbstractEntity } from '../abstract.entity';
+import { ContactInfo } from '../contact-info/contact-info.entity';
 
 
 export enum EUserRole {
@@ -24,4 +25,8 @@ export class UserEntity extends AbstractEntity {
 
   @Column({ type: 'enum', enum: EUserRole, default: EUserRole.USER })
   role: EUserRole;
+
+  @OneToMany((): typeof ContactInfo =>
+      ContactInfo, (contactInfo: ContactInfo): UserEntity => contactInfo.user)
+  contactInfo: ContactInfo[];
 }
