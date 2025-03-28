@@ -31,7 +31,7 @@ export class ContactInfo extends AbstractEntity {
   companyTaxId?: string;
 
   @Column({ nullable: false})
-  userId: number;
+  userId: string;
 
   @ManyToOne((): typeof UserEntity =>
     UserEntity, (item: UserEntity): ContactInfo[] => item.contactInfo)
