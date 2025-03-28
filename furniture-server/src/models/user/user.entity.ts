@@ -1,6 +1,6 @@
-import {
-  Entity, PrimaryGeneratedColumn,
-  Column, CreateDateColumn, UpdateDateColumn, BaseEntity } from 'typeorm';
+import { Entity, Column } from 'typeorm';
+
+import { AbstractEntity } from '../abstract.entity';
 
 
 export enum EUserRole {
@@ -9,10 +9,7 @@ export enum EUserRole {
 }
 
 @Entity('users')
-export class UserEntity extends BaseEntity {
-  @PrimaryGeneratedColumn()
-  id: number;
-
+export class UserEntity extends AbstractEntity {
   @Column({ length: 60, nullable: false })
   firstName: string;
 
@@ -27,11 +24,4 @@ export class UserEntity extends BaseEntity {
 
   @Column({ type: 'enum', enum: EUserRole, default: EUserRole.USER })
   role: EUserRole;
-
-  @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
-
-  @UpdateDateColumn({ name: 'updated_at' })
-  updatedAt: Date;
-
 }
