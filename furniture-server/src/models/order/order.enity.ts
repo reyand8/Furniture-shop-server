@@ -1,11 +1,12 @@
 import {
-  Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToOne, OneToMany,
-  JoinColumn, CreateDateColumn, UpdateDateColumn
+  Entity, Column, ManyToOne,
+  OneToOne, OneToMany, JoinColumn
 } from 'typeorm';
 
 import { UserEntity } from '../user/user.entity';
 import { ContactInfo } from '../contact-info/contact-info.entity';
 import { OrderDetails } from '../order-details/order-details';
+import { AbstractEntity } from '../abstract.entity';
 
 
 export enum OrderStatus {
@@ -23,9 +24,7 @@ export enum PaymentMethod {
 }
 
 @Entity('orders')
-export class Order {
-  @PrimaryGeneratedColumn()
-  id: number;
+export class Order extends AbstractEntity {
 
   @ManyToOne((): typeof UserEntity => UserEntity, (user: UserEntity): Order[] =>
       user.orders, { nullable: false })
@@ -51,10 +50,4 @@ export class Order {
 
   @Column({ type: 'text', nullable: true })
   notes?: string;
-
-  @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
-
-  @UpdateDateColumn({ name: 'updated_at' })
-  updatedAt: Date;
 }
