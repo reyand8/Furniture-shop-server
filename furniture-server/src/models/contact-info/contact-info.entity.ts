@@ -30,9 +30,6 @@ export class ContactInfo extends AbstractEntity {
   @Column({ type:'varchar', length: 40, nullable: true })
   companyTaxId?: string;
 
-  @Column({ nullable: false})
-  userId: string;
-
   @ManyToOne((): typeof UserEntity =>
     UserEntity, (item: UserEntity): ContactInfo[] => item.contactInfo)
   @JoinColumn({ name: 'userId' })

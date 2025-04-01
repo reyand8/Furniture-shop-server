@@ -5,7 +5,7 @@ import {
 
 import { UserEntity } from '../user/user.entity';
 import { ContactInfo } from '../contact-info/contact-info.entity';
-import { OrderDetails } from '../order-details/order-details';
+import { OrderDetailsEntity } from '../order-details/order-details.entity';
 import { AbstractEntity } from '../abstract.entity';
 
 
@@ -24,9 +24,9 @@ export enum PaymentMethod {
 }
 
 @Entity('orders')
-export class Order extends AbstractEntity {
+export class OrderEntity extends AbstractEntity {
 
-  @ManyToOne((): typeof UserEntity => UserEntity, (user: UserEntity): Order[] =>
+  @ManyToOne((): typeof UserEntity => UserEntity, (user: UserEntity): OrderEntity[] =>
       user.orders, { nullable: false })
   @JoinColumn({ name: 'user_id' })
   user: UserEntity;
@@ -35,9 +35,9 @@ export class Order extends AbstractEntity {
   @JoinColumn({ name: 'contact_info_id' })
   contactInfo: ContactInfo;
 
-  @OneToMany((): typeof OrderDetails => OrderDetails, (orderItem: OrderDetails): Order =>
+  @OneToMany((): typeof OrderDetailsEntity => OrderDetailsEntity, (orderItem: OrderDetailsEntity): OrderEntity =>
       orderItem.order, { cascade: true })
-  orderItems: OrderDetails[];
+  orderItems: OrderDetailsEntity[];
 
   @Column({ type: 'enum', enum: OrderStatus, default: OrderStatus.PENDING })
   status: OrderStatus;

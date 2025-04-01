@@ -2,10 +2,11 @@ import { Entity, Column, OneToMany } from 'typeorm';
 
 import { AbstractEntity } from '../abstract.entity';
 import { ContactInfo } from '../contact-info/contact-info.entity';
-import { Order } from '../order/order.enity';
+import { OrderEntity } from '../order/order.entity';
 
 
 export enum EUserRole {
+  SUPER_ADMIN = 'SUPER_ADMIN',
   ADMIN = 'ADMIN',
   USER = 'USER',
 }
@@ -31,6 +32,6 @@ export class UserEntity extends AbstractEntity {
       ContactInfo, (contactInfo: ContactInfo): UserEntity => contactInfo.user)
   contactInfo: ContactInfo[];
 
-  @OneToMany((): typeof Order => Order, (order: Order): UserEntity => order.user)
-  orders: Order[];
+  @OneToMany((): typeof OrderEntity => OrderEntity, (order: OrderEntity): UserEntity => order.user)
+  orders: OrderEntity[];
 }
