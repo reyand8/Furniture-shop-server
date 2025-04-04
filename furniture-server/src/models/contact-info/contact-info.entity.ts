@@ -4,7 +4,7 @@ import { AbstractEntity } from '../abstract.entity';
 import { UserEntity } from '../user/user.entity';
 
 
-@Entity()
+@Entity('contact_info')
 export class ContactInfo extends AbstractEntity {
   @Column({ type:'varchar', length: 13, nullable: false })
   phone: string;
