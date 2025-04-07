@@ -9,5 +9,18 @@ services:
       - "5432:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
+  server:
+    build:
+      context: ./furniture-server
+      dockerfile: Dockerfile
+    container_name: furniture-server
+    depends_on:
+      - db
+    env_file:
+      - ./furniture-server/.env
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./furniture-server:/app
 volumes:
   db-data:

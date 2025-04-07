@@ -2,11 +2,11 @@ import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 
 import { AbstractEntity } from '../abstract.entity';
 import { Product } from '../product/product.entity';
-import { Order } from '../order/order.enity';
+import { OrderEntity } from '../order/order.entity';
 
 
 @Entity('order_details')
-export class OrderDetails extends AbstractEntity{
+export class OrderDetailsEntity extends AbstractEntity{
   @ManyToOne((): typeof Product => Product, { nullable: false })
   @JoinColumn({ name: 'product_id' })
   product: Product;
@@ -17,8 +17,8 @@ export class OrderDetails extends AbstractEntity{
   @Column({ type: 'float', nullable: false })
   price: number;
 
-  @ManyToOne((): typeof Order => Order, (order: Order): OrderDetails[] =>
+  @ManyToOne((): typeof OrderEntity => OrderEntity, (order: OrderEntity): OrderDetailsEntity[] =>
       order.orderItems, { nullable: false })
   @JoinColumn({ name: 'order_id' })
-  order: Order;
+  order: OrderEntity;
 }
