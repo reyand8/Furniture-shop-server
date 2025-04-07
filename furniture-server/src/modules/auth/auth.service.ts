@@ -1,11 +1,11 @@
-import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 
+import { ITokens, IUser, IUserRegister } from './auth.interface';
 import { UserEntity } from '../../models/user/user.entity';
-import { ITokens, IUserRegister } from './auth.interface';
 
 
 @Injectable()
@@ -73,5 +73,58 @@ export class AuthService {
 
         const { access_token, refresh_token } = await this.generateTokens(user);
         return { access_token, refresh_token };
+    }
+
+    /**
+     * Logs in a user by generating access and refresh tokens.
+     * @param loginUser - The user data used to log in.
+     * @returns The access and refresh tokens for the user.
+     */
+    async login(loginUser: IUser): Promise<ITokens> {
+        const { email, id } = loginUser;
+        const payload: { email: string; sub: string } = { email: email, sub: id };
+        return {
+            access_token: this.jwtService.sign(payload),
+            refresh_token: this.jwtService.sign(payload, {
+                expiresIn: '1d',
+            }),
+        };
+    }
+
+    /**
+     * Validates a user by comparing email and password.
+     * @param email - The user's email.
+     * @param pass - The user's password.
+     * @returns The user if credentials are valid, otherwise null.
+     */
+    async validateUser(email: string, pass: string): Promise<IUser | null> {
+        const user: UserEntity | null = await this.userRepository.findOne({ where: { email } });
+        if (user && (await bcrypt.compare(pass, user.password))) {
+            return user;
+        }
+        return null;
+    }
+
+    /**
+     * Finds a user by their ID.
+     * @param userId - The ID of the user.
+     * @returns The found user entity.
+     * @throws BadRequestException if the ID is invalid.
+     * @throws NotFoundException if the user is not found.
+     */
+    async findById(userId: string): Promise<UserEntity> {
+        if (!userId) {
+            throw new BadRequestException('Invalid ID');
+        }
+
+        const user: UserEntity | null = await this.userRepository.findOne({
+            where: { id: userId },
+        });
+
+        if (!user) {
+            throw new NotFoundException(`User with id: ${userId} not found`);
+        }
+
+        return user;
     }
 }

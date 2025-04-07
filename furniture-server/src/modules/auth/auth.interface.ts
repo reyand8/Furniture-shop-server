@@ -3,6 +3,15 @@ export interface ITokens {
     refresh_token: string;
 }
 
+export interface IUser {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+    createdAt: Date;
+}
+
 export interface IUserRegister {
     firstName: string;
     lastName: string;
