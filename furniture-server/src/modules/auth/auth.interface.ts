@@ -8,8 +8,10 @@ export interface IUser {
     firstName: string;
     lastName: string;
     email: string;
+    role: string;
     password: string;
     createdAt: Date;
+    updatedAt: Date;
 }
 
 export interface IUserRegister {

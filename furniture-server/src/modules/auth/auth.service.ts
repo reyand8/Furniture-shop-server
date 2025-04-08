@@ -1,4 +1,6 @@
-import { BadRequestException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import {
+    BadRequestException, HttpStatus,
+    Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { Repository } from 'typeorm';
@@ -81,14 +83,36 @@ export class AuthService {
      * @returns The access and refresh tokens for the user.
      */
     async login(loginUser: IUser): Promise<ITokens> {
-        const { email, id } = loginUser;
-        const payload: { email: string; sub: string } = { email: email, sub: id };
+        const { email, id, role } = loginUser;
+        const payload: { email: string; sub: string, role: string } =
+            { email: email, sub: id, role: role };
         return {
             access_token: this.jwtService.sign(payload),
             refresh_token: this.jwtService.sign(payload, {
                 expiresIn: '1d',
             }),
         };
+    }
+
+    /**
+     * Finds a user by a given field (e.g., id, email, etc.).
+     * @param field - The field to find by (e.g., id, email).
+     * @param value - The value of the field (e.g., userId or email).
+     * @returns The found user entity.
+     * @throws BadRequestException if the value is invalid.
+     * @throws NotFoundException if the user is not found.
+     */
+    async findBy(field: string, value: string): Promise<UserEntity> {
+        if (!value) {
+            throw new BadRequestException('Invalid value');
+        }
+        const user: UserEntity | null = await this.userRepository.findOne({
+            where: { [field]: value },
+        });
+        if (!user) {
+            throw new NotFoundException(`User with ${field}: ${value} not found`);
+        }
+        return user;
     }
 
     /**
@@ -99,32 +123,19 @@ export class AuthService {
      */
     async validateUser(email: string, pass: string): Promise<IUser | null> {
         const user: UserEntity | null = await this.userRepository.findOne({ where: { email } });
-        if (user && (await bcrypt.compare(pass, user.password))) {
+        if (user && await this.comparePasswords(pass, user.password)) {
             return user;
         }
         return null;
     }
 
     /**
-     * Finds a user by their ID.
-     * @param userId - The ID of the user.
-     * @returns The found user entity.
-     * @throws BadRequestException if the ID is invalid.
-     * @throws NotFoundException if the user is not found.
+     * Compares a plaintext password with a hashed password.
+     * @param pass - The plaintext password.
+     * @param hashedPassword - The hashed password.
+     * @returns True if the passwords match, otherwise false.
      */
-    async findById(userId: string): Promise<UserEntity> {
-        if (!userId) {
-            throw new BadRequestException('Invalid ID');
-        }
-
-        const user: UserEntity | null = await this.userRepository.findOne({
-            where: { id: userId },
-        });
-
-        if (!user) {
-            throw new NotFoundException(`User with id: ${userId} not found`);
-        }
-
-        return user;
+    async comparePasswords(pass: string, hashedPassword: string): Promise<boolean> {
+        return bcrypt.compare(pass, hashedPassword);
     }
 }
