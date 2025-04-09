@@ -24,11 +24,26 @@ export class UserService {
         if (!user) {
             throw new NotFoundException('User not found');
         }
+        this.updateUserData(user, updateUserDto);
+        return this.userRepository.save(user);
+    }
+
+    /**
+     * Updates user entity fields with provided DTO values,
+     * excluding sensitive or restricted fields such as password, id, and role.
+     *
+     * @param user - The user entity to be updated.
+     * @param updateUserDto - The DTO containing fields to update.
+     */
+    private updateUserData(user: UserEntity, updateUserDto: UpdateUserDto): void {
+        const forbiddenFields: string[] = ['password', 'id', 'role'];
         for (const key in updateUserDto) {
-            if (updateUserDto[key] !== undefined) {
+            if (
+                updateUserDto[key] !== undefined &&
+                !forbiddenFields.includes(key)
+            ) {
                 user[key] = updateUserDto[key];
             }
         }
-        return this.userRepository.save(user);
     }
 }
