@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 
 import { ContactInfo } from '../../models/contact-info/contact-info.entity';
 import { UserEntity } from '../../models/user/user.entity';
+import { JwtStrategy } from './auth-guard/jwt.strategy';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 
@@ -22,7 +23,8 @@ import { AuthService } from './auth.service';
         }),
     ],
     controllers: [AuthController],
-    providers: [AuthService],
+    providers: [JwtStrategy, AuthService],
     exports: [AuthService, JwtModule],
 })
+
 export class AuthModule {}
