@@ -1,11 +1,13 @@
-import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+    BadRequestException, HttpStatus,
+    Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 
+import { ITokens, IUser, IUserRegister } from './auth.interface';
 import { UserEntity } from '../../models/user/user.entity';
-import { ITokens, IUserRegister } from './auth.interface';
 
 
 @Injectable()
@@ -73,5 +75,67 @@ export class AuthService {
 
         const { access_token, refresh_token } = await this.generateTokens(user);
         return { access_token, refresh_token };
+    }
+
+    /**
+     * Logs in a user by generating access and refresh tokens.
+     * @param loginUser - The user data used to log in.
+     * @returns The access and refresh tokens for the user.
+     */
+    async login(loginUser: IUser): Promise<ITokens> {
+        const { email, id, role } = loginUser;
+        const payload: { email: string; sub: string, role: string } =
+            { email: email, sub: id, role: role };
+        return {
+            access_token: this.jwtService.sign(payload),
+            refresh_token: this.jwtService.sign(payload, {
+                expiresIn: '1d',
+            }),
+        };
+    }
+
+    /**
+     * Finds a user by a given field (e.g., id, email, etc.).
+     * @param field - The field to find by (e.g., id, email).
+     * @param value - The value of the field (e.g., userId or email).
+     * @returns The found user entity.
+     * @throws BadRequestException if the value is invalid.
+     * @throws NotFoundException if the user is not found.
+     */
+    async findBy(field: string, value: string): Promise<UserEntity> {
+        if (!value) {
+            throw new BadRequestException('Invalid value');
+        }
+        const user: UserEntity | null = await this.userRepository.findOne({
+            where: { [field]: value },
+        });
+        if (!user) {
+            throw new NotFoundException(`User with ${field}: ${value} not found`);
+        }
+        return user;
+    }
+
+    /**
+     * Validates a user by comparing email and password.
+     * @param email - The user's email.
+     * @param pass - The user's password.
+     * @returns The user if credentials are valid, otherwise null.
+     */
+    async validateUser(email: string, pass: string): Promise<IUser | null> {
+        const user: UserEntity | null = await this.userRepository.findOne({ where: { email } });
+        if (user && await this.comparePasswords(pass, user.password)) {
+            return user;
+        }
+        return null;
+    }
+
+    /**
+     * Compares a plaintext password with a hashed password.
+     * @param pass - The plaintext password.
+     * @param hashedPassword - The hashed password.
+     * @returns True if the passwords match, otherwise false.
+     */
+    async comparePasswords(pass: string, hashedPassword: string): Promise<boolean> {
+        return bcrypt.compare(pass, hashedPassword);
     }
 }
