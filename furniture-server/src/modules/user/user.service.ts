@@ -1,7 +1,8 @@
 import {
-    BadRequestException, Injectable,
-    InternalServerErrorException, NotFoundException
-}  from '@nestjs/common';
+    Injectable,
+    InternalServerErrorException,
+    NotFoundException
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -11,17 +12,18 @@ import { CreateContactInfoDto } from './dto/createСontactInfo.dto';
 import { UpdateContactInfoDto } from './dto/updateContactInfo.dto';
 import { ContactInfoEntity }  from '../../models/contact-info/contact-info.entity';
 import {
-    ERROR_SERVER,
+    ERROR_MESSAGES,
     FORBIDDEN_FIELDS_PROFILE,
-    INVALID_CONTACT_INFO_ID, INVALID_USER_ID,
-    NOT_FOUND_CONTACT_INFO,
-    NOT_FOUND_USER_DTO,
-    NOT_FOUND_USER_PROFILE,
-    REQUIRED_USER_ID,
-    REQUIRED_USER_ID_AND_CONTACT_INFO_ID,
-    UUID_REGEX
-} from './common/constants';
+} from '../common/constants';
+import {
+    validateDtoFields,
+    validateDtoNotEmpty,
+    validateIds,
+    validateUserId
+} from '../common/validation';
 
+
+const { NOT_FOUND_USER_PROFILE, ERROR_SERVER, NOT_FOUND_CONTACT_INFO } = ERROR_MESSAGES;
 
 @Injectable()
 export class UserService {
@@ -48,10 +50,10 @@ export class UserService {
         if (!user) {
             throw new NotFoundException(NOT_FOUND_USER_PROFILE);
         }
-        this.validateDtoNotEmpty(updateUserDto);
+        validateDtoNotEmpty(updateUserDto);
         try {
             const updatedProfile: UserEntity =
-                this.validateDtoFields(user, updateUserDto, FORBIDDEN_FIELDS_PROFILE);
+                validateDtoFields(user, updateUserDto, FORBIDDEN_FIELDS_PROFILE);
             return await this.userRepository.save(updatedProfile);
         } catch (error) {
             throw new InternalServerErrorException(ERROR_SERVER, error.message);
@@ -69,7 +71,7 @@ export class UserService {
      * @returns A list of contact information associated with the user
      */
     async getContactInfo(userId: string): Promise<ContactInfoEntity[]> {
-        this.validateUserId(userId);
+        validateUserId(userId);
         try {
             return this.contactInfoRepository.find({ where: { user: { id: userId } } });
         } catch (error) {
@@ -91,8 +93,8 @@ export class UserService {
     async createContactInfo(
         createContactInfoDto: CreateContactInfoDto,
         userId: string): Promise<ContactInfoEntity> {
-        this.validateUserId(userId);
-        this.validateDtoNotEmpty(createContactInfoDto);
+        validateUserId(userId);
+        validateDtoNotEmpty(createContactInfoDto);
         try {
             const contactInfo: ContactInfoEntity = this.contactInfoRepository.create({
                 ...createContactInfoDto,
@@ -120,7 +122,7 @@ export class UserService {
         contactInfoId: string,
         userId: string
     ): Promise<ContactInfoEntity> {
-        this.validateIds(contactInfoId, userId);
+        validateIds(contactInfoId, userId);
         try {
             const contactInfo: ContactInfoEntity | null = await this.contactInfoRepository.findOne({
                 where: {
@@ -155,10 +157,10 @@ export class UserService {
         updateContactInfoDto: UpdateContactInfoDto,
         userId: string
     ): Promise<ContactInfoEntity> {
-        this.validateDtoNotEmpty(updateContactInfoDto);
+        validateDtoNotEmpty(updateContactInfoDto);
         try {
             const contactInfo: ContactInfoEntity = await this.getContactInfoByIdAndUser(contactInfoId, userId);
-            const validatedDto: ContactInfoEntity = this.validateDtoFields(contactInfo, updateContactInfoDto);
+            const validatedDto: ContactInfoEntity = validateDtoFields(contactInfo, updateContactInfoDto);
             return await this.contactInfoRepository.save(validatedDto);
         } catch (error) {
             throw new InternalServerErrorException(ERROR_SERVER, error.message);
@@ -180,90 +182,13 @@ export class UserService {
         contactInfoId: string,
         userId: string
     ): Promise<void> {
-        this.validateIds(contactInfoId, userId);
+        validateIds(contactInfoId, userId);
         try {
-            const contactInfo: ContactInfoEntity = await this.getContactInfoByIdAndUser(contactInfoId, userId);
+            const contactInfo: ContactInfoEntity =
+                await this.getContactInfoByIdAndUser(contactInfoId, userId);
             await this.contactInfoRepository.remove(contactInfo);
         } catch (error) {
             throw new InternalServerErrorException(ERROR_SERVER, error.message);
         }
-    }
-
-    /**
-     * Validates the userId and throws BadRequestException if invalid.
-     *
-     * @param userId - The ID of the user to validate
-     */
-    private validateUserId(userId: string): void {
-        if (!userId) {
-            throw new BadRequestException(REQUIRED_USER_ID);
-        }
-        if (!this.validateUUID(userId)) {
-            throw new BadRequestException(INVALID_USER_ID);
-        }
-    }
-
-    /**
-     * Validates both contactInfoId and userId, checking that both are present and
-     * the contactInfoId format is valid.
-     * Throws BadRequestException if any validation fails.
-     *
-     * @param contactInfoId - The contact information ID to validate
-     * @param userId - The user ID to validate
-     */
-    private validateIds(contactInfoId: string, userId: string): void {
-        if (!contactInfoId || !userId) {
-            throw new BadRequestException(REQUIRED_USER_ID_AND_CONTACT_INFO_ID);
-        }
-        if (!this.validateUUID(contactInfoId)) {
-            throw new BadRequestException(INVALID_CONTACT_INFO_ID);
-        }
-        if (!this.validateUUID(userId)) {
-            throw new BadRequestException(INVALID_USER_ID);
-        }
-    }
-
-    /**
-     * Validates a UUID format using a regular expression.
-     *
-     * @param uuid - The UUID string to validate
-     * @returns True if the UUID format is valid, otherwise false
-     */
-    private validateUUID(uuid: string): boolean {
-        return UUID_REGEX.test(uuid);
-    }
-
-    /**
-     * Validates that the provided DTO is not null, undefined, or an empty object.
-     * Throws NotFoundException if the DTO is missing or contains no fields.
-     *
-     * @param userDto - The DTO object to validate (UpdateUserDto or CreateContactInfoDto).
-     * @throws NotFoundException - If the DTO is empty or not provided.
-     */
-    private validateDtoNotEmpty(userDto: UpdateUserDto | CreateContactInfoDto) {
-        if (!userDto || Object.keys(userDto).length === 0) {
-            throw new NotFoundException(NOT_FOUND_USER_DTO);
-        }
-    }
-
-    /**
-     * Updates fields of an entity using a DTO, excluding forbidden fields like password, id, and role.
-     *
-     * @param entity - The entity to update
-     * @param updateDto - The DTO containing fields to update
-     * @param forbiddenFields - Array of field names that should not be updated
-     */
-    private validateDtoFields<T>(
-        entity: T,
-        updateDto: Partial<T>,
-        forbiddenFields: string[] = []
-    ): T {
-        const updatedEntity = { ...entity };
-        for (const key in updateDto) {
-            if (updateDto[key] && !forbiddenFields.includes(key)) {
-                updatedEntity[key] = updateDto[key];
-            }
-        }
-        return updatedEntity;
     }
 }
