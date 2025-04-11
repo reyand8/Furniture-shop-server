@@ -1,6 +1,6 @@
 export const UUID_REGEX: RegExp = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 
-export const FORBIDDEN_FIELDS_PROFILE: string[] = ['password', 'id', 'role'];
+export const FORBIDDEN_FIELDS_PROFILE: string[] = ['password', 'id', 'role', 'isActive'];
 
 export const NOT_FOUND_USER_PROFILE: string = 'User profile not found';
 

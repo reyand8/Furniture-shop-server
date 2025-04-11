@@ -5,12 +5,12 @@ import { Module } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UserController } from './user.controller';
 import { UserEntity } from '../../models/user/user.entity';
-import { ContactInfo } from '../../models/contact-info/contact-info.entity';
+import { ContactInfoEntity } from '../../models/contact-info/contact-info.entity';
 
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([UserEntity, ContactInfo]),
+        TypeOrmModule.forFeature([UserEntity, ContactInfoEntity]),
         PassportModule.register({ defaultStrategy: 'jwt' }),
     ],
     controllers: [UserController],

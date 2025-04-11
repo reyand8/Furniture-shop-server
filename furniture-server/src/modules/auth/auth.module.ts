@@ -3,7 +3,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
-import { ContactInfo } from '../../models/contact-info/contact-info.entity';
+import { ContactInfoEntity } from '../../models/contact-info/contact-info.entity';
 import { UserEntity } from '../../models/user/user.entity';
 import { JwtStrategy } from './auth-guard/jwt.strategy';
 import { AuthController } from './auth.controller';
@@ -12,7 +12,7 @@ import { AuthService } from './auth.service';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([UserEntity, ContactInfo]),
+        TypeOrmModule.forFeature([UserEntity, ContactInfoEntity]),
         JwtModule.registerAsync({
             imports: [ConfigModule],
             useFactory: async (configService: ConfigService) => ({

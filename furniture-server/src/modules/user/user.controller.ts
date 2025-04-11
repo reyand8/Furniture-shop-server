@@ -9,7 +9,7 @@ import { UpdateUserDto } from './dto/updateUser.dto';
 import { UserEntity } from '../../models/user/user.entity';
 import { CreateContactInfoDto } from './dto/createСontactInfo.dto';
 import { UpdateContactInfoDto } from './dto/updateContactInfo.dto';
-import { ContactInfo } from '../../models/contact-info/contact-info.entity';
+import { ContactInfoEntity } from '../../models/contact-info/contact-info.entity';
 
 
 @Controller('users')
@@ -46,7 +46,7 @@ export class UserController {
      */
     @Get('contact-info')
     @UseGuards(AuthGuard('jwt'))
-    async getContactInfo(@Request() req: any): Promise<ContactInfo[]> {
+    async getContactInfo(@Request() req: any): Promise<ContactInfoEntity[]> {
         return this.userService.getContactInfo(req.user.id);
     }
 
@@ -60,7 +60,7 @@ export class UserController {
     @UseGuards(AuthGuard('jwt'))
     async createContactInfo(
         @Body() createContactInfoDto: CreateContactInfoDto,
-        @Request() req: any): Promise<ContactInfo> {
+        @Request() req: any): Promise<ContactInfoEntity> {
         return this.userService.createContactInfo(createContactInfoDto, req.user.id);
     }
 
@@ -74,7 +74,7 @@ export class UserController {
     @UseGuards(AuthGuard('jwt'))
     async getContactInfoById(
         @Param('id') contactInfoId: string,
-        @Request() req: any): Promise<ContactInfo> {
+        @Request() req: any): Promise<ContactInfoEntity> {
         return this.userService.getContactInfoByIdAndUser(contactInfoId, req.user.id);
     }
 
@@ -91,7 +91,7 @@ export class UserController {
         @Param('id') contactInfoId: string,
         @Body() updateContactInfoDto: UpdateContactInfoDto,
         @Request() req: any
-    ): Promise<ContactInfo> {
+    ): Promise<ContactInfoEntity> {
         return this.userService.updateContactInfoById(contactInfoId, updateContactInfoDto, req.user.id);
     }
 
