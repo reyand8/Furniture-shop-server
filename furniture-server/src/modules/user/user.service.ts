@@ -9,7 +9,7 @@ import { UpdateUserDto } from './dto/updateUser.dto';
 import { UserEntity } from '../../models/user/user.entity';
 import { CreateContactInfoDto } from './dto/createСontactInfo.dto';
 import { UpdateContactInfoDto } from './dto/updateContactInfo.dto';
-import { ContactInfo }  from '../../models/contact-info/contact-info.entity';
+import { ContactInfoEntity }  from '../../models/contact-info/contact-info.entity';
 import {
     ERROR_SERVER,
     FORBIDDEN_FIELDS_PROFILE,
@@ -27,7 +27,7 @@ import {
 export class UserService {
     constructor(
       @InjectRepository(UserEntity) private userRepository: Repository<UserEntity>,
-      @InjectRepository(ContactInfo) private contactInfoRepository: Repository<ContactInfo>,
+      @InjectRepository(ContactInfoEntity) private contactInfoRepository: Repository<ContactInfoEntity>,
     ) {}
 
     /**
@@ -68,7 +68,7 @@ export class UserService {
      * @param userId - The ID of the user whose contact information is requested
      * @returns A list of contact information associated with the user
      */
-    async getContactInfo(userId: string): Promise<ContactInfo[]> {
+    async getContactInfo(userId: string): Promise<ContactInfoEntity[]> {
         this.validateUserId(userId);
         try {
             return this.contactInfoRepository.find({ where: { user: { id: userId } } });
@@ -90,11 +90,11 @@ export class UserService {
      */
     async createContactInfo(
         createContactInfoDto: CreateContactInfoDto,
-        userId: string): Promise<ContactInfo> {
+        userId: string): Promise<ContactInfoEntity> {
         this.validateUserId(userId);
         this.validateDtoNotEmpty(createContactInfoDto);
         try {
-            const contactInfo: ContactInfo = this.contactInfoRepository.create({
+            const contactInfo: ContactInfoEntity = this.contactInfoRepository.create({
                 ...createContactInfoDto,
                 user: { id: userId }
             });
@@ -119,10 +119,10 @@ export class UserService {
     async getContactInfoByIdAndUser(
         contactInfoId: string,
         userId: string
-    ): Promise<ContactInfo> {
+    ): Promise<ContactInfoEntity> {
         this.validateIds(contactInfoId, userId);
         try {
-            const contactInfo: ContactInfo | null = await this.contactInfoRepository.findOne({
+            const contactInfo: ContactInfoEntity | null = await this.contactInfoRepository.findOne({
                 where: {
                     id: contactInfoId,
                     user: { id: userId },
@@ -154,11 +154,11 @@ export class UserService {
         contactInfoId: string,
         updateContactInfoDto: UpdateContactInfoDto,
         userId: string
-    ): Promise<ContactInfo> {
+    ): Promise<ContactInfoEntity> {
         this.validateDtoNotEmpty(updateContactInfoDto);
         try {
-            const contactInfo: ContactInfo = await this.getContactInfoByIdAndUser(contactInfoId, userId);
-            const validatedDto: ContactInfo = this.validateDtoFields(contactInfo, updateContactInfoDto);
+            const contactInfo: ContactInfoEntity = await this.getContactInfoByIdAndUser(contactInfoId, userId);
+            const validatedDto: ContactInfoEntity = this.validateDtoFields(contactInfo, updateContactInfoDto);
             return await this.contactInfoRepository.save(validatedDto);
         } catch (error) {
             throw new InternalServerErrorException(ERROR_SERVER, error.message);
@@ -182,7 +182,7 @@ export class UserService {
     ): Promise<void> {
         this.validateIds(contactInfoId, userId);
         try {
-            const contactInfo: ContactInfo = await this.getContactInfoByIdAndUser(contactInfoId, userId);
+            const contactInfo: ContactInfoEntity = await this.getContactInfoByIdAndUser(contactInfoId, userId);
             await this.contactInfoRepository.remove(contactInfo);
         } catch (error) {
             throw new InternalServerErrorException(ERROR_SERVER, error.message);

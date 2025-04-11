@@ -4,7 +4,7 @@ import {
 } from 'typeorm';
 
 import { UserEntity } from '../user/user.entity';
-import { ContactInfo } from '../contact-info/contact-info.entity';
+import { ContactInfoEntity } from '../contact-info/contact-info.entity';
 import { OrderDetailsEntity } from '../order-details/order-details.entity';
 import { AbstractEntity } from '../abstract.entity';
 
@@ -31,9 +31,9 @@ export class OrderEntity extends AbstractEntity {
   @JoinColumn({ name: 'user_id' })
   user: UserEntity;
 
-  @OneToOne((): typeof ContactInfo => ContactInfo, { nullable: false })
+  @OneToOne((): typeof ContactInfoEntity => ContactInfoEntity, { nullable: false })
   @JoinColumn({ name: 'contact_info_id' })
-  contactInfo: ContactInfo;
+  contactInfo: ContactInfoEntity;
 
   @OneToMany((): typeof OrderDetailsEntity => OrderDetailsEntity, (orderItem: OrderDetailsEntity): OrderEntity =>
       orderItem.order, { cascade: true })

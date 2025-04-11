@@ -5,7 +5,7 @@ import { UserEntity } from '../user/user.entity';
 
 
 @Entity('contact_info')
-export class ContactInfo extends AbstractEntity {
+export class ContactInfoEntity extends AbstractEntity {
   @Column({ type:'varchar', length: 13, nullable: false })
   phone: string;
 
@@ -31,7 +31,7 @@ export class ContactInfo extends AbstractEntity {
   companyTaxId?: string;
 
   @ManyToOne((): typeof UserEntity =>
-    UserEntity, (item: UserEntity): ContactInfo[] => item.contactInfo)
+    UserEntity, (item: UserEntity): ContactInfoEntity[] => item.contactInfo)
   @JoinColumn({ name: 'userId' })
   user: UserEntity;
 }

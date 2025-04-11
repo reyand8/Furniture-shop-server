@@ -9,6 +9,7 @@ export interface IUser {
     lastName: string;
     email: string;
     role: string;
+    isActive: boolean;
     password: string;
     createdAt: Date;
     updatedAt: Date;
