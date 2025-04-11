@@ -1,7 +1,7 @@
 import {Entity, Column, ManyToOne} from 'typeorm';
 
 import { AbstractEntity } from '../abstract.entity';
-import { Category } from '../category/category.entity';
+import { CategoryEntity } from '../category/category.entity';
 
 
 export enum ProductType {
@@ -45,7 +45,7 @@ export class Product extends AbstractEntity{
   @Column()
   categoryId: string;
 
-  @ManyToOne((): typeof Category=> Category, (category: Category): Product[] =>
+  @ManyToOne((): typeof CategoryEntity=> CategoryEntity, (category: CategoryEntity): Product[] =>
       category.products, { onDelete: 'CASCADE' })
-  category: Category;
+  category: CategoryEntity;
 }
