@@ -17,7 +17,11 @@ async function bootstrap(): Promise<void> {
 
   app.useGlobalPipes(new ValidationPipe({
     forbidNonWhitelisted: true,
-    transform: true,
+    whitelist: true,
+    transform: false,
+    transformOptions: {
+      exposeUnsetFields: false
+    },
     exceptionFactory: (errors: ValidationError[]): BadRequestException => {
       return new BadRequestException(errors.map(
           (err: ValidationError): {field: string, errors: string[]} => ({
