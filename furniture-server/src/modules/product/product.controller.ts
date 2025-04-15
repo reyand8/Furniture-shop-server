@@ -1,12 +1,15 @@
 import {
     Body, Controller, Delete,
-    Get, Param, Post, Put
+    Get, Param, Post, Put, Query
 } from '@nestjs/common';
 
 import { ProductService } from './product.service';
 import { CreateCategoryDto } from './dto/createCategory.dto';
 import { UpdateCategoryDto } from './dto/updateCategory.dto';
 import { CategoryEntity } from '../../models/category/category.entity';
+import { ProductEntity } from '../../models/product/product.entity';
+import { CreateProductDto } from './dto/createProduct.dto';
+import { UpdateProductDto } from './dto/updateProduct.dto';
 
 
 @Controller('catalog')
@@ -63,5 +66,99 @@ export class ProductController {
         @Body() updateCategoryDto: UpdateCategoryDto
     ): Promise<CategoryEntity> {
         return this.productService.updateCategory(id, updateCategoryDto);
+    }
+
+    /**
+     * Retrieves products with optional filters and pagination.
+     * @param {string} category - Optional category ID filter.
+     * @param {number} minPrice - Optional minimum price filter.
+     * @param {number} maxPrice - Optional maximum price filter.
+     * @param {number} page - Page number for pagination (default is 1).
+     * @param {number} pageSize - Number of items per page (default is 10).
+     * @returns {Promise<{ products: ProductEntity[], totalPages: number }>}
+     * List of products with pagination info.
+     */
+    @Get('products')
+    async getProducts(
+        @Query('category') category?: string,
+        @Query('minPrice') minPrice?: number,
+        @Query('maxPrice') maxPrice?: number,
+        @Query('page') page: number = 1,
+        @Query('pageSize') pageSize: number = 10
+    ): Promise<{ products: ProductEntity[], totalPages: number }> {
+        return this.productService.getProducts(category, minPrice, maxPrice, page, pageSize);
+    }
+
+    /**
+     * Creates a new product.
+     * @param {CreateProductDto} createProductDto - DTO with product data.
+     * @returns {Promise<ProductEntity>} The created product.
+     */
+    @Post('product')
+    async createProduct(@Body() createProductDto: CreateProductDto): Promise<ProductEntity> {
+        return this.productService.createProduct(createProductDto);
+    }
+
+    /**
+     * Updates an existing product by its ID.
+     * @param {string} id - Product ID.
+     * @param {UpdateProductDto} updateProductDto - DTO with updated data.
+     * @returns {Promise<ProductEntity>} The updated product.
+     */
+    @Put('product/:id')
+    async updateProduct(
+        @Param('id') id: string,
+        @Body() updateProductDto: UpdateProductDto
+    ): Promise<ProductEntity> {
+        return this.productService.updateProduct(id, updateProductDto);
+    }
+
+    /**
+     * Retrieves a single product by ID.
+     * @param {string} id - The ID of the product.
+     * @returns {Promise<ProductEntity | null>} The requested product.
+     */
+    @Get('product/:id')
+    async getProduct(@Param('id') id: string): Promise<ProductEntity | null> {
+        return this.productService.getProductById(id);
+    }
+
+    /**
+     * Deletes a product by its ID.
+     * @param {string} id - The ID of the product to delete.
+     * @returns {Promise<void>} A promise indicating the deletion result.
+     */
+    @Delete('product/:id')
+    async deleteProduct(@Param('id') id: string): Promise<void> {
+        return this.productService.deleteProduct(id);
+    }
+
+    /**
+     * Retrieves products related to a specific type.
+     * @param {string} type - The product type to filter by.
+     * @returns {Promise<ProductEntity[]>} List of related products.
+     */
+    @Get('relative-products')
+    async getRelativeProducts(@Query('type') type: string): Promise<ProductEntity[]> {
+        return this.productService.getRelativeProducts(type);
+    }
+
+    /**
+     * Searches products by name.
+     * @param {string} name - The name (or part of it) to search for.
+     * @returns {Promise<ProductEntity[]>} List of products matching the search term.
+     */
+    @Get('search')
+    async searchProductByName(@Query('name') name: string): Promise<ProductEntity[]> {
+        return this.productService.searchProductByName(name);
+    }
+
+    /**
+     * Retrieves top seller products.
+     * @returns {Promise<ProductEntity[]>} List of top-selling products.
+     */
+    @Get('top-products')
+    async getTopProducts(): Promise<ProductEntity[]> {
+        return this.productService.getTopSellerProducts();
     }
 }
