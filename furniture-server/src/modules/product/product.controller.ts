@@ -10,6 +10,7 @@ import { CategoryEntity } from '../../models/category/category.entity';
 import { ProductEntity } from '../../models/product/product.entity';
 import { CreateProductDto } from './dto/createProduct.dto';
 import { UpdateProductDto } from './dto/updateProduct.dto';
+import { GetProductsQueryDto } from './dto/getProductsQuery.dto';
 
 
 @Controller('catalog')
@@ -69,24 +70,22 @@ export class ProductController {
     }
 
     /**
-     * Retrieves products with optional filters and pagination.
-     * @param {string} category - Optional category ID filter.
-     * @param {number} minPrice - Optional minimum price filter.
-     * @param {number} maxPrice - Optional maximum price filter.
-     * @param {number} page - Page number for pagination (default is 1).
-     * @param {number} pageSize - Number of items per page (default is 10).
+     * Retrieves a list of products with optional filters and pagination.
+     * @param {GetProductsQueryDto} query - Object containing optional filters:
+     *  - category (string): Optional category ID filter.
+     *  - minPrice (number): Optional minimum price filter.
+     *  - maxPrice (number): Optional maximum price filter.
+     *  - page (number): Page number for pagination (default is 1).
+     *  - pageSize (number): Number of items per page (default is 10).
+     *
      * @returns {Promise<{ products: ProductEntity[], totalPages: number }>}
-     * List of products with pagination info.
+     * A list of products and the total number of pages based on the filters.
      */
     @Get('products')
     async getProducts(
-        @Query('category') category?: string,
-        @Query('minPrice') minPrice?: number,
-        @Query('maxPrice') maxPrice?: number,
-        @Query('page') page: number = 1,
-        @Query('pageSize') pageSize: number = 10
+        @Query() query: GetProductsQueryDto
     ): Promise<{ products: ProductEntity[], totalPages: number }> {
-        return this.productService.getProducts(category, minPrice, maxPrice, page, pageSize);
+        return this.productService.getProducts(query);
     }
 
     /**

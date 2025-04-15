@@ -1,4 +1,4 @@
-import { ILike, Repository, SelectQueryBuilder } from 'typeorm';
+import { Between, ILike, LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
 import { BadRequestException, Injectable,
     InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -11,9 +11,11 @@ import {
     validateProductId, validateProductType
 } from '../common/validation';
 import { UpdateCategoryDto } from './dto/updateCategory.dto';
-import {ProductEntity, ProductType} from "../../models/product/product.entity";
-import {UpdateProductDto} from "./dto/updateProduct.dto";
-import {CreateProductDto} from "./dto/createProduct.dto";
+import { ProductEntity, ProductType } from '../../models/product/product.entity';
+import { UpdateProductDto } from './dto/updateProduct.dto';
+import { CreateProductDto } from './dto/createProduct.dto';
+import { GetProductsQueryDto } from './dto/getProductsQuery.dto';
+import { IWhereCondition } from './product.interface';
 
 
 const { ERROR_SERVER, REQUIRED_CATEGORY_NAME, NOT_FOUND_CATEGORY,
@@ -128,32 +130,33 @@ export class ProductService {
     }
 
     /**
-     * Retrieves a paginated list of products with optional filtering by category and price range.
-     * Also calculates total pages for pagination.
+     * Retrieves a paginated list of products with optional filters for category and price range.
+     * Also calculates the total number of pages based on the total count of matched products.
      *
-     * @param categoryId - Optional category ID to filter products by category.
-     * @param minPrice - Optional minimum price filter.
-     * @param maxPrice - Optional maximum price filter.
-     * @param page - Page number for pagination (default: 1).
-     * @param pageSize - Number of products per page (default: 10).
-     * @returns An object containing the list of products and the total number of pages.
-     * @throws {InternalServerErrorException} If there's an error during the database query.
+     * @param getProductsQueryDto - DTO containing pagination and filter options
+     * @returns An object with the list of products and the total number of pages
+     * @throws {InternalServerErrorException} If an error occurs during the database query
      */
-    async getProducts (
-        categoryId?: string,
-        minPrice?: number,
-        maxPrice?: number,
-        page: number = 1,
-        pageSize: number = 10
+    async getProducts(
+        getProductsQueryDto: GetProductsQueryDto
     ): Promise<{ products: ProductEntity[], totalPages: number }> {
+
+        const { minPrice, maxPrice, page = 1, pageSize = 10 } = getProductsQueryDto;
+
         validateProductFilters(page, pageSize, minPrice, maxPrice);
-        const skip: number = (page - 1) * pageSize;
+
+        const skipPage: number = (page - 1) * pageSize;
+
         try {
-            const query: SelectQueryBuilder<ProductEntity> =
-                this.buildProductQuery(categoryId, minPrice, maxPrice);
-            const [products, totalCount] =
-                await query.skip(skip).take(pageSize).getManyAndCount();
-            return {products, totalPages: Math.ceil(totalCount / pageSize)};
+            const where: IWhereCondition = this.buildGetProductWhereCondition(getProductsQueryDto);
+            const [products, totalCount] = await this.productRepository.findAndCount({
+                where,
+                relations: ['category'],
+                skip: skipPage,
+                take: pageSize,
+                order: { createdAt: 'DESC' },
+            });
+            return { products, totalPages: Math.ceil(totalCount / pageSize) };
         } catch (error) {
             throw new InternalServerErrorException(ERROR_SERVER, error.message);
         }
@@ -301,6 +304,7 @@ export class ProductService {
             return await this.productRepository.find({
                 where: { isBestSeller: true },
                 order: { createdAt: 'DESC' },
+                relations: ['category'],
             });
         } catch (error) {
             throw new InternalServerErrorException(ERROR_SERVER, error.message);
@@ -308,36 +312,27 @@ export class ProductService {
     }
 
     /**
-     * Builds a query for fetching products with optional filters for category and price range.
-     * Also joins the category relation to include category data in the results.
+     * Builds a dynamic "where" condition object for querying products
+     * based on optional filters like category and price range.
      *
-     * @param categoryId - Optional category ID to filter products.
-     * @param minPrice - Optional minimum price filter.
-     * @param maxPrice - Optional maximum price filter.
-     * @returns A SelectQueryBuilder instance for the product entity.
+     * @param getProductsQueryDto - DTO containing query filters (category, minPrice, maxPrice)
+     * @returns An object representing the "where" condition for a TypeORM query
      */
-    private buildProductQuery(
-        categoryId?: string,
-        minPrice?: number,
-        maxPrice?: number
-    ): SelectQueryBuilder<ProductEntity> {
+    private buildGetProductWhereCondition(getProductsQueryDto: GetProductsQueryDto): IWhereCondition {
+        const { category, minPrice, maxPrice } = getProductsQueryDto;
 
-        const query: SelectQueryBuilder<ProductEntity> =
-            this.productRepository
-                .createQueryBuilder('product')
-                .leftJoinAndSelect('product.category', 'category');
+        const where: IWhereCondition = {};
 
-        if (categoryId != null) {
-            query.andWhere('product.categoryId = :categoryId', { categoryId });
+        if (category) {
+            where.category = { id: category };
         }
-
-        if (minPrice != null) {
-            query.andWhere('product.price >= :minPrice', { minPrice });
+        if (minPrice !== undefined && maxPrice !== undefined) {
+            where.price = Between(minPrice, maxPrice);
+        } else if (minPrice !== undefined) {
+            where.price = MoreThanOrEqual(minPrice);
+        } else if (maxPrice !== undefined) {
+            where.price = LessThanOrEqual(maxPrice);
         }
-
-        if (maxPrice != null) {
-            query.andWhere('product.price <= :maxPrice', { maxPrice });
-        }
-        return query;
+        return where;
     }
 }
