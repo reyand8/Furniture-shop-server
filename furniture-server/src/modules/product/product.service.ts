@@ -1,7 +1,6 @@
-import { Between, ILike, LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
+import { Between, LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
 import { BadRequestException, Injectable,
     InternalServerErrorException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 
 import { CategoryEntity } from '../../models/category/category.entity';
 import { ERROR_MESSAGES } from '../common/constants';
@@ -16,18 +15,19 @@ import { UpdateProductDto } from './dto/updateProduct.dto';
 import { CreateProductDto } from './dto/createProduct.dto';
 import { GetProductsQueryDto } from './dto/getProductsQuery.dto';
 import { IWhereCondition } from './product.interface';
+import { CategoryRepository } from './repository/category.repository';
+import { ProductRepository } from './repository/product.repository';
 
 
 const { ERROR_SERVER, REQUIRED_CATEGORY_NAME, NOT_FOUND_CATEGORY,
-    REQUIRED_PRODUCT_NAME, NOT_FOUND_PRODUCT } = ERROR_MESSAGES;
+    REQUIRED_PRODUCT_NAME, NOT_FOUND_PRODUCT, EXISTS_CATEGORY_NAME
+} = ERROR_MESSAGES;
 
 @Injectable()
 export class ProductService {
     constructor(
-      @InjectRepository(CategoryEntity)
-      private categoryRepository: Repository<CategoryEntity>,
-      @InjectRepository(ProductEntity)
-      private productRepository: Repository<ProductEntity>,
+        private readonly categoryRepository: CategoryRepository,
+        private readonly productRepository: ProductRepository
     ) {}
 
     /**
@@ -38,7 +38,7 @@ export class ProductService {
      */
     async getCategories(): Promise<CategoryEntity[]> {
         try {
-            return await this.categoryRepository.find();
+            return this.categoryRepository.findAll();
         } catch (error) {
             throw new InternalServerErrorException(ERROR_SERVER, error.message);
         }
@@ -56,9 +56,8 @@ export class ProductService {
     async getCategory(id: string): Promise<CategoryEntity> {
         validateCategoryId(id);
         try {
-            const category: CategoryEntity | null = await this.categoryRepository.findOne({
-                where: { id }
-            });
+            const category: CategoryEntity | null =
+                await this.categoryRepository.findById(id);
             if (!category) {
                 throw new InternalServerErrorException(NOT_FOUND_CATEGORY);
             }
@@ -80,8 +79,12 @@ export class ProductService {
             throw new BadRequestException(REQUIRED_CATEGORY_NAME);
         }
         try {
-            const category: CategoryEntity = this.categoryRepository.create({ name });
-            return await this.categoryRepository.save(category);
+            const isCatExist: CategoryEntity | null
+                = await this.categoryRepository.findByName(name);
+            if (isCatExist) {
+                throw new BadRequestException(EXISTS_CATEGORY_NAME);
+            }
+            return this.categoryRepository.createCategory(name);
         } catch (error) {
             throw new InternalServerErrorException(ERROR_SERVER, error.message);
         }
@@ -96,7 +99,7 @@ export class ProductService {
     async deleteCategory(id: string): Promise<void> {
         validateCategoryId(id);
         try {
-            await this.categoryRepository.delete(id);
+            await this.categoryRepository.deleteById(id);
         } catch (error) {
             throw new InternalServerErrorException(ERROR_SERVER, error.message);
         }
@@ -111,19 +114,20 @@ export class ProductService {
      * @throws {InternalServerErrorException} If the category is not found or if there's an error during the update process.
      * @throws {BadRequestException} If the category ID is invalid.
      */
-    async updateCategory(id: string, updateCategoryDto: UpdateCategoryDto): Promise<CategoryEntity> {
+    async updateCategory(
+        id: string,
+        updateCategoryDto: UpdateCategoryDto
+    ): Promise<CategoryEntity> {
         validateCategoryId(id);
         validateDtoNotEmpty(updateCategoryDto);
         try {
             const category: CategoryEntity | null =
-                await this.categoryRepository.findOne({
-                    where: { id }
-            });
+                await this.categoryRepository.findById(id);
             if (!category) {
                 throw new InternalServerErrorException(NOT_FOUND_CATEGORY);
             }
-            const validateDto: CategoryEntity = validateDtoFields(category, updateCategoryDto);
-            return await this.categoryRepository.save(validateDto);
+            const validatedDto: CategoryEntity = validateDtoFields(category, updateCategoryDto);
+            return this.categoryRepository.save(validatedDto);
         } catch (error) {
             throw new InternalServerErrorException(ERROR_SERVER, error.message);
         }
@@ -148,14 +152,10 @@ export class ProductService {
         const skipPage: number = (page - 1) * pageSize;
 
         try {
-            const where: IWhereCondition = this.buildGetProductWhereCondition(getProductsQueryDto);
-            const [products, totalCount] = await this.productRepository.findAndCount({
-                where,
-                relations: ['category'],
-                skip: skipPage,
-                take: pageSize,
-                order: { createdAt: 'DESC' },
-            });
+            const where: IWhereCondition =
+                this.buildGetProductWhereCondition(getProductsQueryDto);
+            const [products, totalCount] =
+                await this.productRepository.findPaginated(where, skipPage, pageSize);
             return { products, totalPages: Math.ceil(totalCount / pageSize) };
         } catch (error) {
             throw new InternalServerErrorException(ERROR_SERVER, error.message);
@@ -172,11 +172,7 @@ export class ProductService {
     async createProduct(createProductDto: CreateProductDto): Promise<ProductEntity> {
         validateDtoNotEmpty(createProductDto);
         try {
-            const product: ProductEntity = this.productRepository.create({
-                ...createProductDto,
-                category: {id: createProductDto.categoryId}
-            });
-            return await this.productRepository.save(product);
+            return this.productRepository.createProduct(createProductDto);
         } catch (error) {
             throw new InternalServerErrorException(ERROR_SERVER, error.message);
         }
@@ -199,15 +195,12 @@ export class ProductService {
         validateDtoNotEmpty(updateProductDto);
         try {
             const product: ProductEntity | null =
-                await this.productRepository.findOne({
-                    where: { id },
-                    relations: ['category'],
-                });
+                await this.productRepository.findById(id)
             if (!product) {
                 throw new InternalServerErrorException(NOT_FOUND_PRODUCT);
             }
-            const validateDto: ProductEntity = validateDtoFields(product, updateProductDto);
-            return await this.productRepository.save(validateDto);
+            const validatedDto: ProductEntity = validateDtoFields(product, updateProductDto);
+            return this.productRepository.update(validatedDto);
         } catch (error) {
             throw new InternalServerErrorException(ERROR_SERVER, error.message);
         }
@@ -216,18 +209,15 @@ export class ProductService {
     /**
      * Retrieves a product by its ID, including its category relation.
      *
-     * @param productId - The ID of the product to retrieve.
+     * @param id - The ID of the product to retrieve.
      * @returns The product entity if found, or throws an error if not found.
      * @throws {InternalServerErrorException} If there's an error during the database operation.
      */
-    async getProductById(productId: string): Promise<ProductEntity | null> {
-        validateProductId(productId);
+    async getProductById(id: string): Promise<ProductEntity | null> {
+        validateProductId(id);
         try {
             const product: ProductEntity | null =
-                await this.productRepository.findOne({
-                where: { id: productId },
-                relations: ['category'],
-            });
+                await this.productRepository.findById(id)
             if (!product) {
                 throw new BadRequestException(NOT_FOUND_PRODUCT);
             }
@@ -246,7 +236,7 @@ export class ProductService {
     async deleteProduct(id: string): Promise<void> {
         validateProductId(id);
         try {
-            await this.productRepository.delete(id);
+            await this.productRepository.deleteById(id)
         } catch (error) {
             throw new InternalServerErrorException(ERROR_SERVER, error.message);
         }
@@ -259,14 +249,10 @@ export class ProductService {
      * @returns A list of products of the specified type.
      * @throws {InternalServerErrorException} If there's an error during the database operation.
      */
-    async getRelativeProducts(type: string): Promise<ProductEntity[]> {
+    async getRelativeProducts(type: ProductType): Promise<ProductEntity[]> {
         validateProductType(type);
         try {
-            return await this.productRepository.find({
-                where: { type: type as ProductType },
-                order: { createdAt: 'DESC' },
-                relations: ['category'],
-            });
+            return this.productRepository.findByType(type)
         } catch (error) {
             throw new InternalServerErrorException(ERROR_SERVER, error.message);
         }
@@ -284,10 +270,7 @@ export class ProductService {
             throw new BadRequestException(REQUIRED_PRODUCT_NAME);
         }
         try {
-            return await this.productRepository.find({
-                where: { name: ILike(`%${name}%`), },
-                relations: ['category'],
-            });
+            return this.productRepository.searchByName(name);
         } catch (error) {
             throw new InternalServerErrorException(ERROR_SERVER, error.message);
         }
@@ -301,11 +284,7 @@ export class ProductService {
      */
     async getTopSellerProducts(): Promise<ProductEntity[]> {
         try {
-            return await this.productRepository.find({
-                where: { isBestSeller: true },
-                order: { createdAt: 'DESC' },
-                relations: ['category'],
-            });
+            return await this.productRepository.findTopSellers();
         } catch (error) {
             throw new InternalServerErrorException(ERROR_SERVER, error.message);
         }
@@ -318,7 +297,9 @@ export class ProductService {
      * @param getProductsQueryDto - DTO containing query filters (category, minPrice, maxPrice)
      * @returns An object representing the "where" condition for a TypeORM query
      */
-    private buildGetProductWhereCondition(getProductsQueryDto: GetProductsQueryDto): IWhereCondition {
+    private buildGetProductWhereCondition(
+        getProductsQueryDto: GetProductsQueryDto
+    ): IWhereCondition {
         const { category, minPrice, maxPrice } = getProductsQueryDto;
 
         const where: IWhereCondition = {};

@@ -21,4 +21,5 @@ export const ERROR_MESSAGES = {
     INVALID_PRODUCT_ID: 'Invalid product id format',
     INVALID_PRODUCT_TYPE: 'Invalid product type',
     ERROR_SERVER: 'Internal server error:',
+    EXISTS_CATEGORY_NAME: 'Category name exists',
 };

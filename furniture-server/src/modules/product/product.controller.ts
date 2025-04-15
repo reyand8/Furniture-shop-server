@@ -7,7 +7,7 @@ import { ProductService } from './product.service';
 import { CreateCategoryDto } from './dto/createCategory.dto';
 import { UpdateCategoryDto } from './dto/updateCategory.dto';
 import { CategoryEntity } from '../../models/category/category.entity';
-import { ProductEntity } from '../../models/product/product.entity';
+import { ProductEntity, ProductType } from '../../models/product/product.entity';
 import { CreateProductDto } from './dto/createProduct.dto';
 import { UpdateProductDto } from './dto/updateProduct.dto';
 import { GetProductsQueryDto } from './dto/getProductsQuery.dto';
@@ -138,7 +138,7 @@ export class ProductController {
      * @returns {Promise<ProductEntity[]>} List of related products.
      */
     @Get('relative-products')
-    async getRelativeProducts(@Query('type') type: string): Promise<ProductEntity[]> {
+    async getRelativeProducts(@Query('type') type: ProductType): Promise<ProductEntity[]> {
         return this.productService.getRelativeProducts(type);
     }
 
