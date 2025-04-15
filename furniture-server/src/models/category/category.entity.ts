@@ -5,10 +5,10 @@ import { AbstractEntity } from '../abstract.entity';
 
 
 @Entity('categories')
-export class Category extends AbstractEntity {
+export class CategoryEntity extends AbstractEntity {
   @Column({ unique: true })
   name: string;
 
-  @OneToMany((): typeof Product => Product, (product: Product): Category => product.category)
+  @OneToMany((): typeof Product => Product, (product: Product): CategoryEntity => product.category)
   products: Product[];
 }
