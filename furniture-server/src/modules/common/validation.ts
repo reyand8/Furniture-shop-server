@@ -1,6 +1,7 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 import { ERROR_MESSAGES, UUID_REGEX } from './constants';
+import { ProductType } from '../../models/product/product.entity';
 
 
 const {
@@ -8,7 +9,10 @@ const {
     REQUIRED_USER_ID_AND_CONTACT_INFO_ID,
     INVALID_CONTACT_INFO_ID,
     REQUIRED_CATEGORY_ID,
-    INVALID_CATEGORY_ID
+    INVALID_CATEGORY_ID,
+    REQUIRED_PRODUCT_TYPE,
+    REQUIRED_PRODUCT_ID,
+    INVALID_PRODUCT_ID,
 } = ERROR_MESSAGES
 
 /**
@@ -104,5 +108,98 @@ export function validateIds(contactInfoId: string, userId: string): void {
     }
     if (!validateUUID(categoryId)) {
         throw new BadRequestException(INVALID_CATEGORY_ID);
+    }
+}
+
+/**
+ * Validates the provided product ID by ensuring it is both present and in a valid UUID format.
+ *
+ * @param {string} productId - The product ID to be validated.
+ *
+ * @throws {BadRequestException} If the product ID is not provided.
+ * @throws {BadRequestException} If the product ID is not a valid UUID.
+ */
+export function validateProductId(productId: string): void {
+    if (!productId) {
+        throw new BadRequestException(REQUIRED_PRODUCT_ID);
+    }
+    if (!validateUUID(productId)) {
+        throw new BadRequestException(INVALID_PRODUCT_ID);
+    }
+}
+
+/**
+ * Validates the provided product type.
+ * Throws an exception if the type is missing or invalid.
+ *
+ * @param type - The product type to validate.
+ *
+ * @throws {BadRequestException} If the product type is not provided.
+ * @throws {BadRequestException} If the product type is not in ProductType.
+ */
+export function validateProductType(type: string): void {
+    if (!type) {
+        throw new BadRequestException(REQUIRED_PRODUCT_TYPE);
+    }
+    if (!Object.values(ProductType).includes(type as ProductType)) {
+        throw new BadRequestException('Invalid product type');
+    }
+}
+
+/**
+ * Validates filters for product queries, including price range and pagination.
+ *
+ * @param page - The current page number.
+ * @param pageSize - The number of items per page.
+ * @param minPrice - Optional minimum price.
+ * @param maxPrice - Optional maximum price.
+ */
+export function validateProductFilters(
+    page: number,
+    pageSize: number,
+    minPrice?: number,
+    maxPrice?: number,
+): void {
+    if (minPrice !== undefined) {
+        validatePrice('minPrice', minPrice);
+    }
+    if (maxPrice !== undefined) {
+        validatePrice('maxPrice', maxPrice);
+    }
+    validatePages(page, pageSize);
+}
+
+/**
+ * Validates a given price value.
+ * Ensures it is a non-negative number.
+ *
+ * @param type - The name of the price field (e.g., "minPrice").
+ * @param value - The price value to validate.
+ */
+export function validatePrice(type: string, value: number): void {
+    if (isNaN(value)) {
+        throw new BadRequestException(`${type} must be a number`);
+    }
+    if (value < 0) {
+        throw new BadRequestException(`${type} cannot be negative`);
+    }
+}
+
+/**
+ * Validates pagination parameters.
+ * Ensures both page and pageSize are greater than 0, and page is not greater than pageSize.
+ *
+ * @param page - The current page number.
+ * @param pageSize - The number of items per page.
+ */
+export function validatePages(page: number, pageSize: number): void {
+    if (page < 1) {
+        throw new BadRequestException('Page must be greater than 0');
+    }
+    if (pageSize < 1) {
+        throw new BadRequestException('Page size must be greater than 0');
+    }
+    if (page > pageSize) {
+        throw new BadRequestException('Page cannot be greater than page size');
     }
 }

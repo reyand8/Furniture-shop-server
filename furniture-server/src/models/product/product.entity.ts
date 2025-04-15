@@ -1,4 +1,4 @@
-import {Entity, Column, ManyToOne} from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 
 import { AbstractEntity } from '../abstract.entity';
 import { CategoryEntity } from '../category/category.entity';
@@ -11,7 +11,7 @@ export enum ProductType {
 }
 
 @Entity('products')
-export class Product extends AbstractEntity{
+export class ProductEntity extends AbstractEntity{
   @Column({ type: 'varchar', length: 100 })
   name: string;
 
@@ -42,10 +42,8 @@ export class Product extends AbstractEntity{
   @Column({ default: false })
   isBestSeller: boolean;
 
-  @Column()
-  categoryId: string;
-
-  @ManyToOne((): typeof CategoryEntity=> CategoryEntity, (category: CategoryEntity): Product[] =>
+  @ManyToOne((): typeof CategoryEntity=> CategoryEntity, (category: CategoryEntity): ProductEntity[] =>
       category.products, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'categoryId' })
   category: CategoryEntity;
 }

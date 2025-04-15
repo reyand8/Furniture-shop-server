@@ -1,15 +1,15 @@
 import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 
 import { AbstractEntity } from '../abstract.entity';
-import { Product } from '../product/product.entity';
+import { ProductEntity } from '../product/product.entity';
 import { OrderEntity } from '../order/order.entity';
 
 
 @Entity('order_details')
 export class OrderDetailsEntity extends AbstractEntity{
-  @ManyToOne((): typeof Product => Product, { nullable: false })
+  @ManyToOne((): typeof ProductEntity => ProductEntity, { nullable: false })
   @JoinColumn({ name: 'product_id' })
-  product: Product;
+  product: ProductEntity;
 
   @Column({ type: 'int', nullable: false })
   quantity: number;
