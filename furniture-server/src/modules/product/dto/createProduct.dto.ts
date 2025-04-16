@@ -1,6 +1,6 @@
 import {
     IsString, IsOptional, IsNumber,
-    IsArray, Min, MaxLength, IsUUID
+    IsArray, Min, MaxLength, IsUUID, IsBoolean
 } from 'class-validator';
 
 import { ProductType } from '../../../models/product/product.entity';
@@ -36,9 +36,12 @@ export class CreateProductDto {
     @IsString({ each: true, message: 'Each image must be a string (URL).' })
     images: string[];
 
-    @IsArray({ message: 'Sizes list must be an array.' })
-    @IsString({ each: true, message: 'Each size must be a string.' })
-    sizes: string[];
+    @IsString({ message: 'Each size must be a string.' })
+    size: string;
+
+    @IsOptional()
+    @IsBoolean()
+    isAvailable: boolean = true;
 
     @IsUUID('4', { message: 'Category ID must be a valid UUID.' })
     categoryId: string;

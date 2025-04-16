@@ -28,14 +28,15 @@ export class OrderEntity extends AbstractEntity {
 
   @ManyToOne((): typeof UserEntity => UserEntity, (user: UserEntity): OrderEntity[] =>
       user.orders, { nullable: false })
-  @JoinColumn({ name: 'user_id' })
+  @JoinColumn({ name: 'userId' })
   user: UserEntity;
 
   @OneToOne((): typeof ContactInfoEntity => ContactInfoEntity, { nullable: false })
-  @JoinColumn({ name: 'contact_info_id' })
+  @JoinColumn({ name: 'contactInfoId' })
   contactInfo: ContactInfoEntity;
 
-  @OneToMany((): typeof OrderDetailsEntity => OrderDetailsEntity, (orderItem: OrderDetailsEntity): OrderEntity =>
+  @OneToMany((): typeof OrderDetailsEntity => OrderDetailsEntity,
+      (orderItem: OrderDetailsEntity): OrderEntity =>
       orderItem.order, { cascade: true })
   orderItems: OrderDetailsEntity[];
 

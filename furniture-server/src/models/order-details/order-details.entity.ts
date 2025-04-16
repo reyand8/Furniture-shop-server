@@ -8,7 +8,7 @@ import { OrderEntity } from '../order/order.entity';
 @Entity('order_details')
 export class OrderDetailsEntity extends AbstractEntity{
   @ManyToOne((): typeof ProductEntity => ProductEntity, { nullable: false })
-  @JoinColumn({ name: 'product_id' })
+  @JoinColumn({ name: 'productId' })
   product: ProductEntity;
 
   @Column({ type: 'int', nullable: false })
@@ -17,8 +17,10 @@ export class OrderDetailsEntity extends AbstractEntity{
   @Column({ type: 'float', nullable: false })
   price: number;
 
-  @ManyToOne((): typeof OrderEntity => OrderEntity, (order: OrderEntity): OrderDetailsEntity[] =>
+  @ManyToOne(
+      (): typeof OrderEntity => OrderEntity,
+      (order: OrderEntity): OrderDetailsEntity[] =>
       order.orderItems, { nullable: false })
-  @JoinColumn({ name: 'order_id' })
+  @JoinColumn({ name: 'orderId' })
   order: OrderEntity;
 }
