@@ -2,17 +2,22 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 import { ERROR_MESSAGES, UUID_REGEX } from './constants';
 import { ProductType } from '../../models/product/product.entity';
+import { UserEntity } from '../../models/user/user.entity';
 
 
 const {
-    REQUIRED_USER_ID, INVALID_USER_ID,
+    REQUIRED_USER_ID,
     REQUIRED_USER_ID_AND_CONTACT_INFO_ID,
-    INVALID_CONTACT_INFO_ID,
-    REQUIRED_CATEGORY_ID,
-    INVALID_CATEGORY_ID,
-    REQUIRED_PRODUCT_TYPE,
+    REQUIRED_ORDER_ID,
     REQUIRED_PRODUCT_ID,
+    REQUIRED_CATEGORY_ID,
+    REQUIRED_PRODUCT_TYPE,
+    INVALID_USER_ID,
+    INVALID_CONTACT_INFO_ID,
+    INVALID_CATEGORY_ID,
     INVALID_PRODUCT_ID,
+    INVALID_ORDER_ID,
+    NOT_FOUND_USER_PROFILE,
 } = ERROR_MESSAGES
 
 /**
@@ -51,11 +56,11 @@ export function validateUUID(uuid: string): boolean {
  * Validates that the provided DTO is not null, undefined, or an empty object.
  * Throws NotFoundException if the DTO is missing or contains no fields.
  *
- * @param userDto - The DTO object to validate (UpdateUserDto or CreateContactInfoDto).
+ * @param dto - The DTO object to validate.
  * @throws NotFoundException - If the DTO is empty or not provided.
  */
-export function validateDtoNotEmpty<T>(userDto: T): void {
-    if (!userDto || Object.keys(userDto).length === 0) {
+export function validateDtoNotEmpty<T>(dto: T): void {
+    if (!dto || Object.keys(dto).length === 0) {
         throw new NotFoundException('DTO is empty or not found');
     }
 }
@@ -72,6 +77,16 @@ export function validateUserId(userId: string): void {
     if (!validateUUID(userId)) {
         throw new BadRequestException(INVALID_USER_ID);
     }
+}
+
+/**
+ * Validates that the provided user exists.
+ * Throws a NotFoundException if the user is not found.
+ *
+ * @param user - The user entity to validate.
+ */
+export function validateUser(user: UserEntity): void {
+    if (!user) throw new NotFoundException(NOT_FOUND_USER_PROFILE);
 }
 
 /**
@@ -125,6 +140,23 @@ export function validateProductId(productId: string): void {
     }
     if (!validateUUID(productId)) {
         throw new BadRequestException(INVALID_PRODUCT_ID);
+    }
+}
+
+/**
+ * Validates the provided order ID by ensuring it is both present and in a valid UUID format.
+ *
+ * @param {string} orderId - The order ID to be validated.
+ *
+ * @throws {BadRequestException} If the order ID is not provided.
+ * @throws {BadRequestException} If the order ID is not a valid UUID.
+ */
+export function validateOrderId(orderId: string): void {
+    if (!orderId) {
+        throw new BadRequestException(REQUIRED_ORDER_ID);
+    }
+    if (!validateUUID(orderId)) {
+        throw new BadRequestException(INVALID_ORDER_ID);
     }
 }
 
