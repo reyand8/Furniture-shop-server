@@ -23,6 +23,13 @@ export enum PaymentMethod {
   CASH_ON_DELIVERY = 'CASH_ON_DELIVERY'
 }
 
+export enum PaymentStatus {
+  PENDING = 'PENDING',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+  REFUNDED = 'REFUNDED'
+}
+
 @Entity('orders')
 export class OrderEntity extends AbstractEntity {
 
@@ -45,6 +52,9 @@ export class OrderEntity extends AbstractEntity {
 
   @Column({ type: 'enum', enum: PaymentMethod, default: PaymentMethod.CREDIT_CARD })
   paymentMethod: PaymentMethod;
+
+  @Column({ type: 'enum', enum: PaymentStatus, default: PaymentStatus.PENDING })
+  paymentStatus: PaymentStatus;
 
   @Column({ type: 'float', nullable: false })
   totalAmount: number;
