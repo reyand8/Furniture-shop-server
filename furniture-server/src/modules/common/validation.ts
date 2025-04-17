@@ -2,7 +2,6 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 import { ERROR_MESSAGES, UUID_REGEX } from './constants';
 import { ProductType } from '../../models/product/product.entity';
-import { UserEntity } from '../../models/user/user.entity';
 
 
 const {
@@ -17,7 +16,11 @@ const {
     INVALID_CATEGORY_ID,
     INVALID_PRODUCT_ID,
     INVALID_ORDER_ID,
-    NOT_FOUND_USER_PROFILE,
+    NOT_FOUND_DTO,
+    INVALID_PRODUCT_TYPE,
+    INVALID_PAGE,
+    INVALID_PAGE_SIZE,
+    PAGE_GREATER_THAN_SIZE
 } = ERROR_MESSAGES
 
 /**
@@ -60,8 +63,8 @@ export function validateUUID(uuid: string): boolean {
  * @throws NotFoundException - If the DTO is empty or not provided.
  */
 export function validateDtoNotEmpty<T>(dto: T): void {
-    if (!dto || Object.keys(dto).length === 0) {
-        throw new NotFoundException('DTO is empty or not found');
+    if (!dto || !Object.keys(dto).length) {
+        throw new NotFoundException(NOT_FOUND_DTO);
     }
 }
 
@@ -77,16 +80,6 @@ export function validateUserId(userId: string): void {
     if (!validateUUID(userId)) {
         throw new BadRequestException(INVALID_USER_ID);
     }
-}
-
-/**
- * Validates that the provided user exists.
- * Throws a NotFoundException if the user is not found.
- *
- * @param user - The user entity to validate.
- */
-export function validateUser(user: UserEntity): void {
-    if (!user) throw new NotFoundException(NOT_FOUND_USER_PROFILE);
 }
 
 /**
@@ -174,7 +167,7 @@ export function validateProductType(type: string): void {
         throw new BadRequestException(REQUIRED_PRODUCT_TYPE);
     }
     if (!Object.values(ProductType).includes(type as ProductType)) {
-        throw new BadRequestException('Invalid product type');
+        throw new BadRequestException(INVALID_PRODUCT_TYPE);
     }
 }
 
@@ -226,12 +219,12 @@ export function validatePrice(type: string, value: number): void {
  */
 export function validatePages(page: number, pageSize: number): void {
     if (page < 1) {
-        throw new BadRequestException('Page must be greater than 0');
+        throw new BadRequestException(INVALID_PAGE);
     }
     if (pageSize < 1) {
-        throw new BadRequestException('Page size must be greater than 0');
+        throw new BadRequestException(INVALID_PAGE_SIZE);
     }
     if (page > pageSize) {
-        throw new BadRequestException('Page cannot be greater than page size');
+        throw new BadRequestException(PAGE_GREATER_THAN_SIZE);
     }
 }

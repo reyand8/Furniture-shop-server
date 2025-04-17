@@ -32,4 +32,8 @@ export const ERROR_MESSAGES = {
     ERROR_PERMISSION_ORDER_UPDATE: 'You cannot perform this action',
     EXISTS_CATEGORY_NAME: 'Category name exists',
     UNAVAILABLE_PRODUCTS: 'There are some unavailable products:',
+
+    INVALID_PAGE: 'Page must be greater than 0',
+    INVALID_PAGE_SIZE: 'Page size must be greater than 0',
+    PAGE_GREATER_THAN_SIZE: 'Page cannot be greater than page size',
 };
