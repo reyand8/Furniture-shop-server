@@ -59,7 +59,7 @@ export class OrderController {
         @Param('id') id: string,
         @Request() req: any
     ): Promise<OrderEntity> {
-        return this.orderService.findOneByUserId(req.user.id, id);
+        return this.orderService.findOneOrderByUserId(req.user.id, id);
     }
 
     /**
