@@ -11,6 +11,8 @@ import { OrderEntity } from '../../models/order/order.entity';
 import { UserEntity } from '../../models/user/user.entity';
 import { OrderRepository } from './repository/order.repository';
 import { OrderDetailsFactory } from './factory/orderDetails.factory';
+import { ProductRepository } from '../product/repository/product.repository';
+import { UserService } from '../user/user.service';
 
 
 @Module({
@@ -27,7 +29,9 @@ import { OrderDetailsFactory } from './factory/orderDetails.factory';
     controllers: [OrderController],
     providers: [
         OrderService,
+        UserService,
         OrderRepository,
+        ProductRepository,
         OrderDetailsFactory,
     ],
 })

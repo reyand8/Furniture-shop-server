@@ -1,5 +1,8 @@
-import {BadRequestException, Injectable, InternalServerErrorException} from '@nestjs/common';
-
+import {
+    BadRequestException, Injectable,
+    InternalServerErrorException,
+    NotFoundException
+} from '@nestjs/common';
 
 import { ContactInfoEntity } from '../../models/contact-info/contact-info.entity';
 import { OrderEntity, OrderStatus } from "../../models/order/order.entity";
@@ -11,46 +14,62 @@ import { UpdateOrderStatusDto } from './dto/updateOrderStatus.dto';
 import { UserEntity } from '../../models/user/user.entity';
 import { OrderRepository } from './repository/order.repository';
 import { OrderDetailsFactory } from './factory/orderDetails.factory';
-import { validateDtoNotEmpty, validateOrderId, validateUser } from '../common/validation';
+import {
+    validateDtoFields,
+    validateDtoNotEmpty,
+    validateOrderId
+} from '../common/validation';
 import { ERROR_MESSAGES } from '../common/constants';
+import { UserService } from '../user/user.service';
+import { ProductRepository } from '../product/repository/product.repository';
 
 
-const { ERROR_PERMISSION_ORDER_UPDATE, ERROR_SERVER } = ERROR_MESSAGES;
+const {
+    ERROR_PERMISSION_ORDER_UPDATE, ERROR_SERVER,
+    NOT_FOUND_PRODUCT_IN_ORDER, UNAVAILABLE_PRODUCTS,
+    NOT_FOUND_ORDER
+} = ERROR_MESSAGES;
 
 @Injectable()
 export class OrderService {
     constructor(
         private readonly orderRepository: OrderRepository,
-        private readonly orderDetailsFactory: OrderDetailsFactory
+        private readonly orderDetailsFactory: OrderDetailsFactory,
+        private readonly productRepository: ProductRepository,
+        private readonly userService: UserService,
     ) {}
 
     /**
-     * Creates a new order based on the provided DTO and the authenticated user's data.
-     * Validates the input data, checks product availability, calculates order details,
-     * and saves the new order.
+     * Creates a new order using the provided order data and the authenticated user's information.
+     * This method performs the following steps:
+     * - Validates the input DTO.
+     * - Retrieves the user's contact information.
+     * - Ensures all products exist and are available.
+     * - Calculates the order details and total amount.
+     * - Creates and persists the new order.
      *
-     * @param createOrderDto - The DTO containing the order details to create
-     * @param user - The authenticated user who is creating the order
-     * @returns The created OrderEntity
+     * @param createOrderDto - The data transfer object containing order information.
+     * @param user - The authenticated user placing the order.
+     * @returns A promise that resolves to the created OrderEntity.
+     * @throws InternalServerErrorException if an error occurs during the process.
      */
     async create(createOrderDto: CreateOrderDto, user: UserEntity): Promise<OrderEntity> {
         validateDtoNotEmpty(createOrderDto);
-        validateUser(user);
         try {
             const {contactInfoId, orderItems, paymentMethod, status, notes} = createOrderDto;
+
             const contactInfo: ContactInfoEntity =
-                await this.orderRepository.findContactInfoByUser(contactInfoId, user.id);
-            const productIds: string[] =
-                orderItems.map((item: CreateOrderItemDto): string => item.productId);
-            const products: ProductEntity[] =
-                await this.orderRepository.getValidProducts(productIds);
+                await this.userService.getContactInfoByIdAndUser(contactInfoId, user.id);
+
+            const selectedProducts: ProductEntity[] = await this.checkProductsExist(orderItems);
+
+            this.checkUnavailableProducts(selectedProducts);
 
             const {details: orderDetails, total: totalAmount} =
-                this.orderDetailsFactory.createDetails(orderItems, products);
+                this.orderDetailsFactory.createDetails(orderItems, selectedProducts);
 
             const order: OrderEntity = this.orderRepository.createOrder({
-                user,
-                contactInfo,
+                user, contactInfo,
                 orderItems: orderDetails,
                 paymentMethod,
                 status: status || OrderStatus.PENDING,
@@ -64,14 +83,14 @@ export class OrderService {
     }
 
     /**
-     * Retrieves all orders for the authenticated user.
-     * Validates the user's data and retrieves the orders from the repository.
+     * Retrieves all orders associated with the authenticated user.
+     * This method fetches all orders linked to the user's ID from the repository.
      *
-     * @param user - The authenticated user whose orders are being retrieved
-     * @returns An array of OrderEntity objects
+     * @param user - The authenticated user whose orders are being retrieved.
+     * @returns A promise that resolves to an array of OrderEntity objects.
+     * @throws InternalServerErrorException if an error occurs while fetching the data.
      */
     async findAll(user: UserEntity): Promise<OrderEntity[]> {
-        validateUser(user);
         try {
             return this.orderRepository.getAllOrders(user.id);
         } catch (error) {
@@ -80,44 +99,49 @@ export class OrderService {
     }
 
     /**
-     * Retrieves a specific order by its ID for the authenticated user.
-     * Validates the user's data and the order ID before fetching the order.
+     * Retrieves a single order by its ID for the specified user.
+     * Validates the order ID and ensures the order belongs to the given user.
      *
-     * @param user - The authenticated user who owns the order
-     * @param orderId - The ID of the order to retrieve
-     * @returns The found OrderEntity
+     * @param userId - The ID of the authenticated user who owns the order.
+     * @param orderId - The ID of the order to retrieve.
+     * @returns A promise that resolves to the found OrderEntity.
+     * @throws NotFoundException if the order is not found.
+     * @throws InternalServerErrorException if a server error occurs.
      */
-    async findOneByUserId(user: UserEntity, orderId: string): Promise<OrderEntity> {
-        validateUser(user);
+    async findOneOrderByUserId(userId: string, orderId: string): Promise<OrderEntity> {
         validateOrderId(orderId);
         try {
-            return this.orderRepository.getOneOrderByUser(user.id, orderId);
+            const order: OrderEntity | null =
+                await this.orderRepository.getOneOrderByUser(userId, orderId);
+            if (!order) {
+                throw new NotFoundException(NOT_FOUND_ORDER);
+            }
+            return order;
         } catch (error) {
             throw new InternalServerErrorException(ERROR_SERVER, error.message);
         }
     }
 
     /**
-     * Updates the status of an order by its ID for the authenticated user.
-     * Validates the input DTO, order ID, and user data before updating the order status.
+     * Updates the status of a specific order for the authenticated user.
+     * Validates the provided DTO, order ID, and ensures the order belongs to the user.
      *
-     * @param user - The authenticated user who owns the order
-     * @param updateOrderStatusDto - The DTO containing the updated order status
-     * @param orderId - The ID of the order to update
-     * @returns The updated OrderEntity
+     * @param user - The authenticated user who owns the order.
+     * @param updateOrderStatusDto - The DTO containing the new order status.
+     * @param orderId - The ID of the order to be updated.
+     * @returns A promise that resolves to the updated OrderEntity.
+     * @throws NotFoundException if the order is not found.
+     * @throws InternalServerErrorException if a server error occurs.
      */
     async updateOrderStatus(
         user: UserEntity,
         updateOrderStatusDto: UpdateOrderStatusDto,
         orderId: string
     ): Promise<OrderEntity> {
-        validateUser(user);
         validateDtoNotEmpty(updateOrderStatusDto);
         validateOrderId(orderId);
         try {
-            const order: OrderEntity | null =
-                await this.orderRepository.getOneOrderByUser(user.id, orderId);
-
+            const order: OrderEntity = await this.findOneOrderByUserId(user.id, orderId);
             return this.orderRepository.updateOrderStatus(order, updateOrderStatusDto);
         } catch (error) {
             throw new InternalServerErrorException(ERROR_SERVER, error.message);
@@ -127,32 +151,86 @@ export class OrderService {
     /**
      * Updates the details of an existing order based on the provided DTO and order ID for the authenticated user.
      * Validates the user's data and ensures the order is eligible for updates based on its creation time.
+     * If a new contactInfoId is provided, it fetches and assigns the updated contact information.
      *
-     * @param user - The authenticated user who owns the order
-     * @param updateOrderDto - The DTO containing the updated order details
-     * @param orderId - The ID of the order to update
-     * @returns The updated OrderEntity
+     * @param user - The authenticated user who owns the order.
+     * @param updateOrderDto - The DTO containing the updated order fields.
+     * @param orderId - The ID of the order to be updated.
+     * @returns A promise that resolves to the updated OrderEntity.
+     * @throws NotFoundException if the order is not found.
+     * @throws InternalServerErrorException if a server error occurs.
      */
-    async updateOrder(
-        user: UserEntity,
-        updateOrderDto: UpdateOrderDto,
-        orderId: string
+    async updateOrder( user: UserEntity, updateOrderDto: UpdateOrderDto, orderId: string
     ): Promise<OrderEntity> {
-        validateUser(user);
         validateDtoNotEmpty(updateOrderDto);
         validateOrderId(orderId);
         try {
-            const order: OrderEntity | null =
-                await this.orderRepository.getOneOrderByUser(user.id, orderId);
+            const { contactInfoId } = updateOrderDto
+            const order: OrderEntity = await this.findOneOrderByUserId(user.id, orderId);
+            this.checkCreatedTime(order.createdAt);
 
-            const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-
-            if (order.createdAt < fiveMinutesAgo) {
-                throw new BadRequestException(ERROR_PERMISSION_ORDER_UPDATE);
+            if (contactInfoId) {
+                const newContactInfo: ContactInfoEntity[] =
+                    await this.userService.getContactInfo(contactInfoId)
+                order.contactInfo = newContactInfo[0];
             }
-            return this.orderRepository.updateOrder(order, updateOrderDto);
+            const validatedDto: OrderEntity = validateDtoFields(order, updateOrderDto);
+            return this.orderRepository.saveOrder(validatedDto);
         } catch (error) {
             throw new InternalServerErrorException(ERROR_SERVER, error.message);
+        }
+    }
+
+    /**
+     * Checks whether all products referenced in the order items exist.
+     * Throws a BadRequestException if any product is missing.
+     *
+     * @param orderItems - The list of order items containing product IDs.
+     * @returns A promise that resolves to the list of found ProductEntity instances.
+     * @throws BadRequestException if one or more products are not found.
+     */
+    async checkProductsExist(orderItems: CreateOrderItemDto[]): Promise<ProductEntity[]> {
+        const productIds: string[] =
+            orderItems.map((item: CreateOrderItemDto): string => item.productId);
+
+        const selectedProducts: ProductEntity[] =
+            await this.productRepository.findProductsByIds(productIds);
+
+        if (selectedProducts.length !== productIds.length) {
+            throw new BadRequestException(NOT_FOUND_PRODUCT_IN_ORDER);
+        }
+        return selectedProducts
+    }
+
+    /**
+     * Verifies that all provided products are available.
+     * Throws a BadRequestException listing the unavailable products if any are found.
+     *
+     * @param products - The list of ProductEntity instances to check.
+     * @throws BadRequestException if any product is unavailable.
+     */
+    checkUnavailableProducts(products: ProductEntity[]): void {
+        const unavailableProducts: ProductEntity[] =
+            products.filter((product: ProductEntity): boolean => !product.isAvailable);
+
+        if (unavailableProducts.length > 0) {
+            const names: string =
+                unavailableProducts.map((p: ProductEntity): string => p.name).join(', ');
+            throw new BadRequestException(`${UNAVAILABLE_PRODUCTS} ${names}`);
+        }
+    }
+
+    /**
+     * Ensures the order was created within the last 5 minutes.
+     * Used to restrict updates after a short time window.
+     *
+     * @param createdTime - The creation timestamp of the order.
+     * @throws BadRequestException if the order is older than 5 minutes.
+     */
+    checkCreatedTime(createdTime: Date): void {
+        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+        if (createdTime < fiveMinutesAgo) {
+            throw new BadRequestException(ERROR_PERMISSION_ORDER_UPDATE);
         }
     }
 }
