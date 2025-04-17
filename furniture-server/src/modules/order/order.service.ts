@@ -142,7 +142,9 @@ export class OrderService {
         validateOrderId(orderId);
         try {
             const order: OrderEntity = await this.findOneOrderByUserId(user.id, orderId);
-            return this.orderRepository.updateOrderStatus(order, updateOrderStatusDto);
+            const validatedDto: OrderEntity =
+                validateDtoFields(order, updateOrderStatusDto);
+            return this.orderRepository.saveOrder(validatedDto);
         } catch (error) {
             throw new InternalServerErrorException(ERROR_SERVER, error.message);
         }

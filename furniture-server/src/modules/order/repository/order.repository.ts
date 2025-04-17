@@ -50,23 +50,6 @@ export class OrderRepository {
     }
 
     /**
-     * Updates the status of an order based on the provided data transfer object (DTO).
-     * Validates the DTO fields before saving the updated order.
-     *
-     * @param order - The order to update
-     * @param updateOrderStatusDto - The DTO containing the updated order status
-     * @returns The updated OrderEntity
-     */
-    updateOrderStatus(
-        order: OrderEntity,
-        updateOrderStatusDto: UpdateOrderStatusDto
-    ): Promise<OrderEntity> {
-        const validatedDto: OrderEntity =
-            validateDtoFields(order, updateOrderStatusDto);
-        return this.saveOrder(validatedDto);
-    }
-
-    /**
      * Creates a new order based on the provided order data.
      *
      * @param orderData - The data used to create a new order
