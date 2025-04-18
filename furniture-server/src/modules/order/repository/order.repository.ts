@@ -50,22 +50,13 @@ export class OrderRepository {
     }
 
     /**
-     * Creates a new order based on the provided order data.
-     *
-     * @param orderData - The data used to create a new order
-     * @returns The created OrderEntity
-     */
-    createOrder(orderData: Partial<OrderEntity>): OrderEntity {
-        return this.orderRepo.create(orderData);
-    }
-
-    /**
-     * Saves the provided order entity to the database.
+     * Creates a new order entity from the provided data and saves it to the database.
      *
      * @param order - The order entity to save
      * @returns The saved OrderEntity
      */
-    saveOrder(order: OrderEntity): Promise<OrderEntity> {
-        return this.orderRepo.save(order);
+    createAndSaveOrder(order: Partial<OrderEntity>): Promise<OrderEntity> {
+        const createOrder: OrderEntity = this.orderRepo.create(order);
+        return this.orderRepo.save(createOrder);
     }
 }

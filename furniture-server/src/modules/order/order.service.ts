@@ -68,7 +68,7 @@ export class OrderService {
             const {details: orderDetails, total: totalAmount} =
                 this.orderDetailsFactory.createDetails(orderItems, selectedProducts);
 
-            const order: OrderEntity = this.orderRepository.createOrder({
+            return this.orderRepository.createAndSaveOrder({
                 user, contactInfo,
                 orderItems: orderDetails,
                 paymentMethod,
@@ -76,7 +76,6 @@ export class OrderService {
                 totalAmount,
                 notes,
             });
-            return this.orderRepository.saveOrder(order);
         } catch (error) {
             throw new InternalServerErrorException(ERROR_SERVER, error.message);
         }
@@ -144,7 +143,7 @@ export class OrderService {
             const order: OrderEntity = await this.findOneOrderByUserId(user.id, orderId);
             const validatedDto: OrderEntity =
                 validateDtoFields(order, updateOrderStatusDto);
-            return this.orderRepository.saveOrder(validatedDto);
+            return this.orderRepository.createAndSaveOrder(validatedDto);
         } catch (error) {
             throw new InternalServerErrorException(ERROR_SERVER, error.message);
         }
@@ -177,7 +176,7 @@ export class OrderService {
                 order.contactInfo = newContactInfo[0];
             }
             const validatedDto: OrderEntity = validateDtoFields(order, updateOrderDto);
-            return this.orderRepository.saveOrder(validatedDto);
+            return this.orderRepository.createAndSaveOrder(validatedDto);
         } catch (error) {
             throw new InternalServerErrorException(ERROR_SERVER, error.message);
         }
@@ -198,8 +197,17 @@ export class OrderService {
         const selectedProducts: ProductEntity[] =
             await this.productRepository.findProductsByIds(productIds);
 
-        if (selectedProducts.length !== productIds.length) {
-            throw new BadRequestException(NOT_FOUND_PRODUCT_IN_ORDER);
+        const foundIds: Set<string> = new Set(
+            selectedProducts.map((product: ProductEntity): string => product.id)
+        );
+
+        const missingIds: string[] = productIds.filter(
+            (id: string): boolean => !foundIds.has(id)
+        );
+
+        if (missingIds.length > 0) {
+            const ids: string = missingIds.join(', ');
+            throw new BadRequestException(`${NOT_FOUND_PRODUCT_IN_ORDER} [${ids}]`);
         }
         return selectedProducts
     }
@@ -217,8 +225,8 @@ export class OrderService {
 
         if (unavailableProducts.length > 0) {
             const names: string =
-                unavailableProducts.map((p: ProductEntity): string => p.name).join(', ');
-            throw new BadRequestException(`${UNAVAILABLE_PRODUCTS} ${names}`);
+                unavailableProducts.map((p: ProductEntity): string => p.id).join(', ');
+            throw new BadRequestException(`${UNAVAILABLE_PRODUCTS} [${names}]`);
         }
     }
 

@@ -8,7 +8,7 @@ export const ERROR_MESSAGES = {
     NOT_FOUND_DTO: 'DTO is empty or not found',
     NOT_FOUND_CATEGORY: 'Category not found',
     NOT_FOUND_PRODUCT: 'Product not found',
-    NOT_FOUND_PRODUCT_IN_ORDER: 'One or more products were not found',
+    NOT_FOUND_PRODUCT_IN_ORDER: 'One or more products were not found:',
     NOT_FOUND_ORDER: 'Order not found or does not belong to the user',
 
     REQUIRED_USER_ID: 'User id is required',
