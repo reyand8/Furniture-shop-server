@@ -33,14 +33,17 @@ export class ProductEntity extends AbstractEntity{
   @Column({ type: 'enum', enum: ProductType })
   type: ProductType;
 
-  @Column('text', { array: true })
-  sizes: string[];
+  @Column({ type: 'varchar', length: 50 })
+  size: string;
 
   @Column({ type: 'varchar', length: 50, nullable: true })
   color?: string;
 
   @Column({ default: false })
   isBestSeller: boolean;
+
+  @Column({ default: true })
+  isAvailable?: boolean;
 
   @ManyToOne((): typeof CategoryEntity=> CategoryEntity, (category: CategoryEntity): ProductEntity[] =>
       category.products, { onDelete: 'CASCADE' })

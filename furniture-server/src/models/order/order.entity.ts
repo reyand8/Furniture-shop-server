@@ -23,19 +23,27 @@ export enum PaymentMethod {
   CASH_ON_DELIVERY = 'CASH_ON_DELIVERY'
 }
 
+export enum PaymentStatus {
+  PENDING = 'PENDING',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+  REFUNDED = 'REFUNDED'
+}
+
 @Entity('orders')
 export class OrderEntity extends AbstractEntity {
 
   @ManyToOne((): typeof UserEntity => UserEntity, (user: UserEntity): OrderEntity[] =>
       user.orders, { nullable: false })
-  @JoinColumn({ name: 'user_id' })
+  @JoinColumn({ name: 'userId' })
   user: UserEntity;
 
   @OneToOne((): typeof ContactInfoEntity => ContactInfoEntity, { nullable: false })
-  @JoinColumn({ name: 'contact_info_id' })
+  @JoinColumn({ name: 'contactInfoId' })
   contactInfo: ContactInfoEntity;
 
-  @OneToMany((): typeof OrderDetailsEntity => OrderDetailsEntity, (orderItem: OrderDetailsEntity): OrderEntity =>
+  @OneToMany((): typeof OrderDetailsEntity => OrderDetailsEntity,
+      (orderItem: OrderDetailsEntity): OrderEntity =>
       orderItem.order, { cascade: true })
   orderItems: OrderDetailsEntity[];
 
@@ -44,6 +52,9 @@ export class OrderEntity extends AbstractEntity {
 
   @Column({ type: 'enum', enum: PaymentMethod, default: PaymentMethod.CREDIT_CARD })
   paymentMethod: PaymentMethod;
+
+  @Column({ type: 'enum', enum: PaymentStatus, default: PaymentStatus.PENDING })
+  paymentStatus: PaymentStatus;
 
   @Column({ type: 'float', nullable: false })
   totalAmount: number;

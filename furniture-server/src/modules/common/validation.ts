@@ -5,14 +5,22 @@ import { ProductType } from '../../models/product/product.entity';
 
 
 const {
-    REQUIRED_USER_ID, INVALID_USER_ID,
+    REQUIRED_USER_ID,
     REQUIRED_USER_ID_AND_CONTACT_INFO_ID,
-    INVALID_CONTACT_INFO_ID,
-    REQUIRED_CATEGORY_ID,
-    INVALID_CATEGORY_ID,
-    REQUIRED_PRODUCT_TYPE,
+    REQUIRED_ORDER_ID,
     REQUIRED_PRODUCT_ID,
+    REQUIRED_CATEGORY_ID,
+    REQUIRED_PRODUCT_TYPE,
+    INVALID_USER_ID,
+    INVALID_CONTACT_INFO_ID,
+    INVALID_CATEGORY_ID,
     INVALID_PRODUCT_ID,
+    INVALID_ORDER_ID,
+    NOT_FOUND_DTO,
+    INVALID_PRODUCT_TYPE,
+    INVALID_PAGE,
+    INVALID_PAGE_SIZE,
+    PAGE_GREATER_THAN_SIZE
 } = ERROR_MESSAGES
 
 /**
@@ -51,12 +59,12 @@ export function validateUUID(uuid: string): boolean {
  * Validates that the provided DTO is not null, undefined, or an empty object.
  * Throws NotFoundException if the DTO is missing or contains no fields.
  *
- * @param userDto - The DTO object to validate (UpdateUserDto or CreateContactInfoDto).
+ * @param dto - The DTO object to validate.
  * @throws NotFoundException - If the DTO is empty or not provided.
  */
-export function validateDtoNotEmpty<T>(userDto: T): void {
-    if (!userDto || Object.keys(userDto).length === 0) {
-        throw new NotFoundException('DTO is empty or not found');
+export function validateDtoNotEmpty<T>(dto: T): void {
+    if (!dto || !Object.keys(dto).length) {
+        throw new NotFoundException(NOT_FOUND_DTO);
     }
 }
 
@@ -129,6 +137,23 @@ export function validateProductId(productId: string): void {
 }
 
 /**
+ * Validates the provided order ID by ensuring it is both present and in a valid UUID format.
+ *
+ * @param {string} orderId - The order ID to be validated.
+ *
+ * @throws {BadRequestException} If the order ID is not provided.
+ * @throws {BadRequestException} If the order ID is not a valid UUID.
+ */
+export function validateOrderId(orderId: string): void {
+    if (!orderId) {
+        throw new BadRequestException(REQUIRED_ORDER_ID);
+    }
+    if (!validateUUID(orderId)) {
+        throw new BadRequestException(INVALID_ORDER_ID);
+    }
+}
+
+/**
  * Validates the provided product type.
  * Throws an exception if the type is missing or invalid.
  *
@@ -142,7 +167,7 @@ export function validateProductType(type: string): void {
         throw new BadRequestException(REQUIRED_PRODUCT_TYPE);
     }
     if (!Object.values(ProductType).includes(type as ProductType)) {
-        throw new BadRequestException('Invalid product type');
+        throw new BadRequestException(INVALID_PRODUCT_TYPE);
     }
 }
 
@@ -194,12 +219,12 @@ export function validatePrice(type: string, value: number): void {
  */
 export function validatePages(page: number, pageSize: number): void {
     if (page < 1) {
-        throw new BadRequestException('Page must be greater than 0');
+        throw new BadRequestException(INVALID_PAGE);
     }
     if (pageSize < 1) {
-        throw new BadRequestException('Page size must be greater than 0');
+        throw new BadRequestException(INVALID_PAGE_SIZE);
     }
     if (page > pageSize) {
-        throw new BadRequestException('Page cannot be greater than page size');
+        throw new BadRequestException(PAGE_GREATER_THAN_SIZE);
     }
 }

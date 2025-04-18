@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import {DeleteResult, ILike, Repository} from 'typeorm';
+import { DeleteResult, ILike, In, Repository } from 'typeorm';
 
 import { ProductEntity, ProductType } from '../../../models/product/product.entity';
 import { IWhereCondition } from '../product.interface';
@@ -112,6 +112,17 @@ export class ProductRepository {
             where: { isBestSeller: true },
             relations: ['category'],
             order: { createdAt: 'DESC' },
+        });
+    }
+
+    /**
+     * Retrieves products by their IDs.
+     * @param productIds - An array of product IDs to find.
+     * @returns A promise that resolves to an array of found ProductEntity objects.
+     */
+    findProductsByIds(productIds: string[]): Promise<ProductEntity[]> {
+        return this.repository.find({
+            where: { id: In(productIds)}
         });
     }
 }
