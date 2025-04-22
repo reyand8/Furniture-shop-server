@@ -11,6 +11,7 @@ export const ERROR_MESSAGES = {
     NOT_FOUND_PRODUCT_IN_ORDER: 'One or more products were not found:',
     NOT_FOUND_ORDER: 'Order not found or does not belong to the user',
 
+    REQUIRED_ID: 'Id is required',
     REQUIRED_USER_ID: 'User id is required',
     REQUIRED_USER_ID_AND_CONTACT_INFO_ID: 'User id and contact-info are required',
     REQUIRED_CATEGORY_NAME: 'Category name is required',
@@ -20,6 +21,7 @@ export const ERROR_MESSAGES = {
     REQUIRED_PRODUCT_TYPE: 'Product type is required',
     REQUIRED_PRODUCT_NAME: 'Product name is required',
 
+    INVALID_ID_FORMAT: 'Invalid id format',
     INVALID_CONTACT_INFO_ID: 'Invalid contact-info id format',
     INVALID_CONTACT_INFO: 'Invalid contact-info',
     INVALID_USER_ID: 'Invalid user id format',

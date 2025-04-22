@@ -9,7 +9,7 @@ import { CategoryEntity } from '../../../models/category/category.entity';
 export class CategoryRepository {
     constructor(
         @InjectRepository(CategoryEntity)
-        private readonly repository: Repository<CategoryEntity>,
+        private readonly categoryRepo: Repository<CategoryEntity>,
     ) {}
 
     /**
@@ -17,44 +17,44 @@ export class CategoryRepository {
      * @returns A promise that resolves to an array of CategoryEntity objects.
      */
     findAll(): Promise<CategoryEntity[]> {
-        return this.repository.find();
+        return this.categoryRepo.find();
     }
 
     /**
      * Finds a category by its unique ID.
-     * @param id - The ID of the category.
+     * @param categoryId - The ID of the category.
      * @returns A promise that resolves to a CategoryEntity or null if not found.
      */
-    findById(id: string): Promise<CategoryEntity | null> {
-        return this.repository.findOne({ where: { id } });
+    findById(categoryId: string): Promise<CategoryEntity | null> {
+        return this.categoryRepo.findOne({ where: { id: categoryId } });
     }
 
     /**
      * Finds a category by its name.
-     * @param name - The name of the category.
+     * @param categoryName - The name of the category.
      * @returns A promise that resolves to a CategoryEntity or null if not found.
      */
-    findByName(name: string): Promise<CategoryEntity | null> {
-        return this.repository.findOne({ where: { name } });
+    findByName(categoryName: string): Promise<CategoryEntity | null> {
+        return this.categoryRepo.findOne({ where: { name: categoryName } });
     }
 
     /**
      * Creates and saves a new category with the given name.
-     * @param name - The name of the new category.
+     * @param categoryName - The name of the new category.
      * @returns A promise that resolves to the created CategoryEntity.
      */
-    createCategory(name: string): Promise<CategoryEntity> {
-        const category: CategoryEntity = this.repository.create({ name });
-        return this.repository.save(category);
+    createCategory(categoryName: string): Promise<CategoryEntity> {
+        const category: CategoryEntity = this.categoryRepo.create({ name: categoryName });
+        return this.categoryRepo.save(category);
     }
 
     /**
      * Deletes a category by its ID.
-     * @param id - The ID of the category to delete.
+     * @param categoryId - The ID of the category to delete.
      * @returns A promise that resolves to the result of the deletion.
      */
-    deleteById(id: string): Promise<DeleteResult> {
-        return this.repository.delete(id);
+    removeCategory(categoryId: string): Promise<DeleteResult> {
+        return this.categoryRepo.delete(categoryId);
     }
 
     /**
@@ -63,6 +63,6 @@ export class CategoryRepository {
      * @returns A promise that resolves to the updated CategoryEntity.
      */
     save(category: CategoryEntity): Promise<CategoryEntity> {
-        return this.repository.save(category);
+        return this.categoryRepo.save(category);
     }
 }

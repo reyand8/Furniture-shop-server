@@ -13,6 +13,8 @@ import { OrderRepository } from './repository/order.repository';
 import { OrderDetailsFactory } from './factory/orderDetails.factory';
 import { ProductRepository } from '../product/repository/product.repository';
 import { UserService } from '../user/user.service';
+import { UserRepository } from '../user/repository/user.repository';
+import { ContactInfoRepository } from '../user/repository/contactInfo.repository';
 
 
 @Module({
@@ -30,6 +32,8 @@ import { UserService } from '../user/user.service';
     providers: [
         OrderService,
         UserService,
+        UserRepository,
+        ContactInfoRepository,
         OrderRepository,
         ProductRepository,
         OrderDetailsFactory,

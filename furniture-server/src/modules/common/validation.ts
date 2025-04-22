@@ -5,17 +5,12 @@ import { ProductType } from '../../models/product/product.entity';
 
 
 const {
-    REQUIRED_USER_ID,
     REQUIRED_USER_ID_AND_CONTACT_INFO_ID,
-    REQUIRED_ORDER_ID,
-    REQUIRED_PRODUCT_ID,
-    REQUIRED_CATEGORY_ID,
+    REQUIRED_ID,
     REQUIRED_PRODUCT_TYPE,
     INVALID_USER_ID,
     INVALID_CONTACT_INFO_ID,
-    INVALID_CATEGORY_ID,
-    INVALID_PRODUCT_ID,
-    INVALID_ORDER_ID,
+    INVALID_ID_FORMAT,
     NOT_FOUND_DTO,
     INVALID_PRODUCT_TYPE,
     INVALID_PAGE,
@@ -69,20 +64,6 @@ export function validateDtoNotEmpty<T>(dto: T): void {
 }
 
 /**
- * Validates the userId and throws BadRequestException if invalid.
- *
- * @param userId - The ID of the user to validate
- */
-export function validateUserId(userId: string): void {
-    if (!userId) {
-        throw new BadRequestException(REQUIRED_USER_ID);
-    }
-    if (!validateUUID(userId)) {
-        throw new BadRequestException(INVALID_USER_ID);
-    }
-}
-
-/**
  * Validates both contactInfoId and userId, checking that both are present and
  * the contactInfoId format is valid.
  * Throws BadRequestException if any validation fails.
@@ -103,53 +84,19 @@ export function validateIds(contactInfoId: string, userId: string): void {
 }
 
 /**
- * Validates the provided category ID by ensuring it is both present and in a valid UUID format.
+ * Validates the provided ID by ensuring it is both present and in a valid UUID format.
  *
- * @param {string} categoryId - The category ID to be validated.
+ * @param {string} id - The ID to be validated.
  *
- * @throws {BadRequestException} If the category ID is not provided.
- * @throws {BadRequestException} If the category ID is not a valid UUID.
+ * @throws {BadRequestException} If the ID is not provided.
+ * @throws {BadRequestException} If the ID is not a valid UUID.
  */
- export function validateCategoryId(categoryId: string): void {
-    if (!categoryId) {
-        throw new BadRequestException(REQUIRED_CATEGORY_ID);
+ export function validateProvidedId(id: string): void {
+    if (!id) {
+        throw new BadRequestException(REQUIRED_ID);
     }
-    if (!validateUUID(categoryId)) {
-        throw new BadRequestException(INVALID_CATEGORY_ID);
-    }
-}
-
-/**
- * Validates the provided product ID by ensuring it is both present and in a valid UUID format.
- *
- * @param {string} productId - The product ID to be validated.
- *
- * @throws {BadRequestException} If the product ID is not provided.
- * @throws {BadRequestException} If the product ID is not a valid UUID.
- */
-export function validateProductId(productId: string): void {
-    if (!productId) {
-        throw new BadRequestException(REQUIRED_PRODUCT_ID);
-    }
-    if (!validateUUID(productId)) {
-        throw new BadRequestException(INVALID_PRODUCT_ID);
-    }
-}
-
-/**
- * Validates the provided order ID by ensuring it is both present and in a valid UUID format.
- *
- * @param {string} orderId - The order ID to be validated.
- *
- * @throws {BadRequestException} If the order ID is not provided.
- * @throws {BadRequestException} If the order ID is not a valid UUID.
- */
-export function validateOrderId(orderId: string): void {
-    if (!orderId) {
-        throw new BadRequestException(REQUIRED_ORDER_ID);
-    }
-    if (!validateUUID(orderId)) {
-        throw new BadRequestException(INVALID_ORDER_ID);
+    if (!validateUUID(id)) {
+        throw new BadRequestException(INVALID_ID_FORMAT);
     }
 }
 
