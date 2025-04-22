@@ -3,8 +3,6 @@ import {
     InternalServerErrorException,
     NotFoundException
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 
 import { UpdateUserDto } from './dto/updateUser.dto';
 import { UserEntity } from '../../models/user/user.entity';
@@ -19,17 +17,19 @@ import {
     validateDtoFields,
     validateDtoNotEmpty,
     validateIds,
-    validateUserId
+    validateProvidedId,
 } from '../common/validation';
+import { UserRepository } from './repository/user.repository';
+import { ContactInfoRepository } from './repository/contactInfo.repository';
 
 
-const { NOT_FOUND_USER_PROFILE, ERROR_SERVER, NOT_FOUND_CONTACT_INFO } = ERROR_MESSAGES;
+const { ERROR_SERVER, NOT_FOUND_CONTACT_INFO } = ERROR_MESSAGES;
 
 @Injectable()
 export class UserService {
     constructor(
-      @InjectRepository(UserEntity) private userRepository: Repository<UserEntity>,
-      @InjectRepository(ContactInfoEntity) private contactInfoRepository: Repository<ContactInfoEntity>,
+        private readonly userRepository: UserRepository,
+        private readonly contactInfoRepository: ContactInfoRepository,
     ) {}
 
     /**
@@ -47,14 +47,11 @@ export class UserService {
         user: UserEntity,
         updateUserDto: UpdateUserDto
     ): Promise<UserEntity> {
-        if (!user) {
-            throw new NotFoundException(NOT_FOUND_USER_PROFILE);
-        }
         validateDtoNotEmpty(updateUserDto);
         try {
             const updatedProfile: UserEntity =
                 validateDtoFields(user, updateUserDto, FORBIDDEN_FIELDS_PROFILE);
-            return await this.userRepository.save(updatedProfile);
+            return this.userRepository.createAndSave(updatedProfile);
         } catch (error) {
             throw new InternalServerErrorException(ERROR_SERVER, error.message);
         }
@@ -71,9 +68,9 @@ export class UserService {
      * @returns A list of contact information associated with the user
      */
     async getContactInfo(userId: string): Promise<ContactInfoEntity[]> {
-        validateUserId(userId);
+        validateProvidedId(userId);
         try {
-            return this.contactInfoRepository.find({ where: { user: { id: userId } } });
+            return this.contactInfoRepository.findAll(userId);
         } catch (error) {
             throw new InternalServerErrorException(ERROR_SERVER, error.message);
         }
@@ -93,14 +90,11 @@ export class UserService {
     async createContactInfo(
         createContactInfoDto: CreateContactInfoDto,
         userId: string): Promise<ContactInfoEntity> {
-        validateUserId(userId);
+        validateProvidedId(userId);
         validateDtoNotEmpty(createContactInfoDto);
         try {
-            const contactInfo: ContactInfoEntity = this.contactInfoRepository.create({
-                ...createContactInfoDto,
-                user: { id: userId }
-            });
-            return await this.contactInfoRepository.save(contactInfo);
+            const user: {id: string} = { id: userId }
+            return this.contactInfoRepository.createAndSave(createContactInfoDto, user);
         } catch (error) {
             throw new InternalServerErrorException(ERROR_SERVER, error.message);
         }
@@ -124,12 +118,8 @@ export class UserService {
     ): Promise<ContactInfoEntity> {
         validateIds(contactInfoId, userId);
         try {
-            const contactInfo: ContactInfoEntity | null = await this.contactInfoRepository.findOne({
-                where: {
-                    id: contactInfoId,
-                    user: { id: userId },
-                },
-            });
+            const contactInfo: ContactInfoEntity | null =
+                await this.contactInfoRepository.findOneByIds(contactInfoId, userId);
             if (!contactInfo) {
                 throw new NotFoundException(NOT_FOUND_CONTACT_INFO);
             }
@@ -157,11 +147,13 @@ export class UserService {
         updateContactInfoDto: UpdateContactInfoDto,
         userId: string
     ): Promise<ContactInfoEntity> {
+        validateProvidedId(contactInfoId);
         validateDtoNotEmpty(updateContactInfoDto);
         try {
-            const contactInfo: ContactInfoEntity = await this.getContactInfoByIdAndUser(contactInfoId, userId);
+            const contactInfo: ContactInfoEntity =
+                await this.getContactInfoByIdAndUser(contactInfoId, userId);
             const validatedDto: ContactInfoEntity = validateDtoFields(contactInfo, updateContactInfoDto);
-            return await this.contactInfoRepository.save(validatedDto);
+            return await this.contactInfoRepository.createAndUpdate(validatedDto);
         } catch (error) {
             throw new InternalServerErrorException(ERROR_SERVER, error.message);
         }
@@ -182,7 +174,7 @@ export class UserService {
         contactInfoId: string,
         userId: string
     ): Promise<void> {
-        validateIds(contactInfoId, userId);
+        validateProvidedId(contactInfoId);
         try {
             const contactInfo: ContactInfoEntity =
                 await this.getContactInfoByIdAndUser(contactInfoId, userId);

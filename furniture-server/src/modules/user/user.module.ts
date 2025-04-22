@@ -6,7 +6,8 @@ import { UserService } from './user.service';
 import { UserController } from './user.controller';
 import { UserEntity } from '../../models/user/user.entity';
 import { ContactInfoEntity } from '../../models/contact-info/contact-info.entity';
-
+import { UserRepository } from './repository/user.repository';
+import { ContactInfoRepository } from './repository/contactInfo.repository';
 
 @Module({
     imports: [
@@ -14,7 +15,11 @@ import { ContactInfoEntity } from '../../models/contact-info/contact-info.entity
         PassportModule.register({ defaultStrategy: 'jwt' }),
     ],
     controllers: [UserController],
-    providers: [UserService],
+    providers: [
+        UserService,
+        UserRepository,
+        ContactInfoRepository,
+    ],
     exports: [UserService],
 })
 export class UserModule {}
