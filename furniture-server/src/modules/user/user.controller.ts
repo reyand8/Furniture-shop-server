@@ -23,8 +23,9 @@ export class UserController {
      */
     @Get('me')
     @UseGuards(AuthGuard('jwt'))
-    getProfile(@Request() req: any): Promise<boolean | UserEntity> {
-        return req.user;
+    getProfile(@Request() req: any): Promise<Omit<UserEntity, 'password'>> {
+        const { password, ...userWithoutPassword } = req.user;
+        return userWithoutPassword;
     }
 
     /**
@@ -36,7 +37,8 @@ export class UserController {
     @Put('me')
     @UseGuards(AuthGuard('jwt'))
     async updateProfile(@Body() updateUserDto: UpdateUserDto, @Request() req: any): Promise<UserEntity> {
-        return this.userService.updateProfile(req.user, updateUserDto);
+        const { password, ...userWithoutPassword } = req.user;
+        return this.userService.updateProfile(userWithoutPassword, updateUserDto);
     }
 
     /**

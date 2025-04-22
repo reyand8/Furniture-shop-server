@@ -17,7 +17,6 @@ import { OrderDetailsFactory } from './factory/orderDetails.factory';
 import {
     validateDtoFields,
     validateDtoNotEmpty,
-    validateOrderId
 } from '../common/validation';
 import { ERROR_MESSAGES } from '../common/constants';
 import { UserService } from '../user/user.service';
@@ -108,7 +107,7 @@ export class OrderService {
      * @throws InternalServerErrorException if a server error occurs.
      */
     async findOneOrderByUserId(userId: string, orderId: string): Promise<OrderEntity> {
-        validateOrderId(orderId);
+        validateDtoNotEmpty(orderId);
         try {
             const order: OrderEntity | null =
                 await this.orderRepository.getOneOrderByUser(userId, orderId);
@@ -138,7 +137,7 @@ export class OrderService {
         orderId: string
     ): Promise<OrderEntity> {
         validateDtoNotEmpty(updateOrderStatusDto);
-        validateOrderId(orderId);
+        validateDtoNotEmpty(orderId);
         try {
             const order: OrderEntity = await this.findOneOrderByUserId(user.id, orderId);
             const validatedDto: OrderEntity =
@@ -164,7 +163,7 @@ export class OrderService {
     async updateOrder( user: UserEntity, updateOrderDto: UpdateOrderDto, orderId: string
     ): Promise<OrderEntity> {
         validateDtoNotEmpty(updateOrderDto);
-        validateOrderId(orderId);
+        validateDtoNotEmpty(orderId);
         try {
             const { contactInfoId } = updateOrderDto
             const order: OrderEntity = await this.findOneOrderByUserId(user.id, orderId);

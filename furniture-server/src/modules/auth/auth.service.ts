@@ -33,7 +33,8 @@ export class AuthService {
      * @returns A promise that resolves to a boolean indicating whether the email exists.
      */
     async emailExists(email: string): Promise<boolean> {
-        const existingUser: UserEntity | null = await this.userRepository.findOne({ where: { email } });
+        const existingUser: UserEntity | null =
+            await this.userRepository.findOne({ where: { email } });
         return !!existingUser;
     }
 
@@ -57,7 +58,6 @@ export class AuthService {
      */
     async register(regUser: IUserRegister): Promise<ITokens> {
         const { email, password } = regUser;
-
         if (await this.emailExists(email)) {
             throw new BadRequestException({
                 statusCode: HttpStatus.BAD_REQUEST,
@@ -65,7 +65,6 @@ export class AuthService {
                 error: 'Bad Request',
             });
         }
-
         regUser.password = await this.hashPassword(password);
         const user = await this.userRepository.save(regUser);
 

@@ -3,8 +3,6 @@ import { Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
 
 import { OrderEntity } from '../../../models/order/order.entity';
-import { validateDtoFields } from '../../common/validation';
-import { UpdateOrderStatusDto } from '../dto/updateOrderStatus.dto';
 
 
 @Injectable()
@@ -36,13 +34,13 @@ export class OrderRepository {
      * Throws an error if the order is not found or does not belong to the user.
      *
      * @param userId - The ID of the user who owns the order
-     * @param id - The ID of the order to retrieve
+     * @param orderId - The ID of the order to retrieve
      * @returns The found OrderEntity with related data
      */
-    async getOneOrderByUser(userId: string, id: string): Promise<OrderEntity | null> {
+    async getOneOrderByUser(userId: string, orderId: string): Promise<OrderEntity | null> {
         return await this.orderRepo.findOne({
             where: {
-                id,
+                id: orderId,
                 user: {id: userId},
             },
             relations: ['orderItems', 'user', 'contactInfo'],

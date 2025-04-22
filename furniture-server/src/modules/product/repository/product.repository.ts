@@ -11,7 +11,7 @@ import { CreateProductDto } from '../dto/createProduct.dto';
 export class ProductRepository {
     constructor(
         @InjectRepository(ProductEntity)
-        private readonly repository: Repository<ProductEntity>,
+        private readonly productRepo: Repository<ProductEntity>,
     ) {}
 
     /**
@@ -26,7 +26,7 @@ export class ProductRepository {
         skip: number,
         take: number,
     ): Promise<[ProductEntity[], number]> {
-        return this.repository.findAndCount({
+        return this.productRepo.findAndCount({
             where,
             relations: ['category'],
             skip,
@@ -41,11 +41,11 @@ export class ProductRepository {
      * @returns A promise resolving to the created ProductEntity.
      */
     createProduct(createProductDto: CreateProductDto): Promise<ProductEntity> {
-        const product: ProductEntity = this.repository.create({
+        const product: ProductEntity = this.productRepo.create({
             ...createProductDto,
             category: { id: createProductDto.categoryId }
         });
-        return this.repository.save(product);
+        return this.productRepo.save(product);
     }
 
     /**
@@ -54,7 +54,7 @@ export class ProductRepository {
      * @returns A promise resolving to the ProductEntity or null if not found.
      */
     findById(id: string): Promise<ProductEntity | null> {
-        return this.repository.findOne({
+        return this.productRepo.findOne({
             where: { id },
             relations: ['category'],
         });
@@ -66,16 +66,16 @@ export class ProductRepository {
      * @returns A promise resolving to the updated ProductEntity.
      */
     update(product: ProductEntity): Promise<ProductEntity> {
-        return this.repository.save(product);
+        return this.productRepo.save(product);
     }
 
     /**
      * Deletes a product by its ID.
-     * @param id - The ID of the product to delete.
+     * @param productId - The ID of the product to delete.
      * @returns A promise resolving to the result of the deletion.
      */
-    deleteById(id: string): Promise<DeleteResult> {
-        return this.repository.delete(id);
+    removeProduct(productId: string): Promise<DeleteResult> {
+        return this.productRepo.delete(productId);
     }
 
     /**
@@ -84,7 +84,7 @@ export class ProductRepository {
      * @returns A promise resolving to an array of ProductEntity.
      */
     findByType(type: ProductType): Promise<ProductEntity[]> {
-        return this.repository.find({
+        return this.productRepo.find({
             where: { type },
             relations: ['category'],
             order: { createdAt: 'DESC' },
@@ -93,12 +93,12 @@ export class ProductRepository {
 
     /**
      * Searches for products by name using a case-insensitive match.
-     * @param name - The name to search for.
+     * @param productName - The name to search for.
      * @returns A promise resolving to an array of ProductEntity.
      */
-    searchByName(name: string): Promise<ProductEntity[]> {
-        return this.repository.find({
-            where: { name: ILike(`%${name}%`) },
+    searchByName(productName: string): Promise<ProductEntity[]> {
+        return this.productRepo.find({
+            where: { name: ILike(`%${productName}%`) },
             relations: ['category'],
         });
     }
@@ -108,7 +108,7 @@ export class ProductRepository {
      * @returns A promise resolving to an array of ProductEntity.
      */
     findTopSellers(): Promise<ProductEntity[]> {
-        return this.repository.find({
+        return this.productRepo.find({
             where: { isBestSeller: true },
             relations: ['category'],
             order: { createdAt: 'DESC' },
@@ -121,7 +121,7 @@ export class ProductRepository {
      * @returns A promise that resolves to an array of found ProductEntity objects.
      */
     findProductsByIds(productIds: string[]): Promise<ProductEntity[]> {
-        return this.repository.find({
+        return this.productRepo.find({
             where: { id: In(productIds)}
         });
     }
