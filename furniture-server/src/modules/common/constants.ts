@@ -38,4 +38,6 @@ export const ERROR_MESSAGES = {
     INVALID_PAGE: 'Page must be greater than 0',
     INVALID_PAGE_SIZE: 'Page size must be greater than 0',
     PAGE_GREATER_THAN_SIZE: 'Page cannot be greater than page size',
+
+    FORBIDDEN_ACCESS: 'Only super admin can perform this action',
 };

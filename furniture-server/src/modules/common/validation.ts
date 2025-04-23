@@ -1,7 +1,8 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import {BadRequestException, ForbiddenException, NotFoundException} from '@nestjs/common';
 
 import { ERROR_MESSAGES, UUID_REGEX } from './constants';
 import { ProductType } from '../../models/product/product.entity';
+import {EUserRole} from "../../models/user/user.entity";
 
 
 const {
@@ -15,7 +16,8 @@ const {
     INVALID_PRODUCT_TYPE,
     INVALID_PAGE,
     INVALID_PAGE_SIZE,
-    PAGE_GREATER_THAN_SIZE
+    PAGE_GREATER_THAN_SIZE,
+    FORBIDDEN_ACCESS
 } = ERROR_MESSAGES
 
 /**
@@ -173,5 +175,30 @@ export function validatePages(page: number, pageSize: number): void {
     }
     if (page > pageSize) {
         throw new BadRequestException(PAGE_GREATER_THAN_SIZE);
+    }
+}
+
+/**
+ * Validates whether a user with a given role is allowed to access another user's data.
+ * Throws a ForbiddenException if an ADMIN tries to access SUPER_ADMIN data.
+ *
+ * @param role - Role of the user making the request.
+ * @param userByRole - Role of the user being accessed.
+ */
+export function validatePermission(role: EUserRole, userByRole: EUserRole): void {
+    if (role === EUserRole.ADMIN && userByRole === EUserRole.SUPER_ADMIN) {
+        throw new ForbiddenException(FORBIDDEN_ACCESS);
+    }
+}
+
+/**
+ * Validates if the user's role is SUPER_ADMIN.
+ * Throws a ForbiddenException if the user is not a SUPER_ADMIN.
+ *
+ * @param role - Role of the user to validate.
+ */
+export function validateIsSuperAdmin(role: EUserRole): void {
+    if (role !== EUserRole.SUPER_ADMIN) {
+        throw new ForbiddenException(FORBIDDEN_ACCESS);
     }
 }
