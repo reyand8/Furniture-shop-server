@@ -1,6 +1,6 @@
 import {
     Controller, Get, Body,
-    Request, Put, UseGuards, Post, Delete, Param
+    Request, Put, UseGuards, Post, Delete, Param, Query, UseInterceptors
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
@@ -24,18 +24,16 @@ export class UserController {
      * Get a list of all users.
      * Accessible by SUPER_ADMIN and ADMIN roles.
      *
-     * @param req - The request object containing the authenticated user's info.
      * @param getAllUsersDto - DTO with filtering or pagination options for user list.
      * @returns A promise resolving to a list of users with partial information.
      */
-    @Get('all-users')
+    @Get('')
     @Roles(EUserRole.SUPER_ADMIN, EUserRole.ADMIN)
     @UseGuards(AuthGuard('jwt'), RolesGuard)
     getAllUsers(
-        @Request() req: any,
-        @Body() getAllUsersDto: GetAllUsersDto
+        @Query() getAllUsersDto: GetAllUsersDto
     ): Promise<Partial<UserEntity>[]> {
-        return this.userService.getAllUsers(req.user.role, getAllUsersDto);
+        return this.userService.getAllUsers(getAllUsersDto);
     }
 
     /**
@@ -46,34 +44,14 @@ export class UserController {
      * @param updateUserRoleDto - DTO containing the new role.
      * @returns A promise resolving to the updated user with partial information.
      */
-    @Put('update-role/:id')
+    @Put(':id')
     @Roles(EUserRole.SUPER_ADMIN)
     @UseGuards(AuthGuard('jwt'), RolesGuard)
-    async updateUserRole(
+    updateUserFields(
         @Param('id') userId: string,
         @Body() updateUserRoleDto: UpdateUserRoleDto
     ): Promise<Partial<UserEntity>> {
-        return this.userService.updateUserRole(userId, updateUserRoleDto);
-    }
-
-    /**
-     * Update the active status of a specific user (e.g., activate or deactivate account).
-     * Accessible only by SUPER_ADMIN.
-     *
-     * @param req - The request object containing the authenticated user's info.
-     * @param userId - ID of the user whose status is being updated.
-     * @param body - An object containing the new `isActive` status.
-     * @returns A promise resolving to the updated user with partial information.
-     */
-    @Put('update-status/:id')
-    @Roles(EUserRole.SUPER_ADMIN)
-    @UseGuards(AuthGuard('jwt'), RolesGuard)
-    async updateUserStatus(
-        @Request() req: any,
-        @Param('id') userId: string,
-        @Body() body: { isActive: boolean }
-    ): Promise<Partial<UserEntity>> {
-        return this.userService.updateUserStatus(req.user.role, userId, body.isActive);
+        return this.userService.updateUserFields(userId, updateUserRoleDto);
     }
 
     /**
@@ -95,7 +73,7 @@ export class UserController {
      */
     @Put('me')
     @UseGuards(AuthGuard('jwt'))
-    async updateProfile(
+    updateProfile(
         @Body() updateUserDto: UpdateUserDto,
         @Request() req: any
     ): Promise<Partial<UserEntity>> {
@@ -109,7 +87,7 @@ export class UserController {
      */
     @Get('contact-info')
     @UseGuards(AuthGuard('jwt'))
-    async getContactInfo(@Request() req: any): Promise<ContactInfoEntity[]> {
+    getContactInfo(@Request() req: any): Promise<ContactInfoEntity[]> {
         return this.userService.getContactInfo(req.user.id);
     }
 
@@ -121,7 +99,7 @@ export class UserController {
      */
     @Post('contact-info')
     @UseGuards(AuthGuard('jwt'))
-    async createContactInfo(
+    createContactInfo(
         @Body() createContactInfoDto: CreateContactInfoDto,
         @Request() req: any): Promise<ContactInfoEntity> {
         return this.userService.createContactInfo(createContactInfoDto, req.user.id);
@@ -135,7 +113,7 @@ export class UserController {
      */
     @Get('contact-info/:id')
     @UseGuards(AuthGuard('jwt'))
-    async getContactInfoById(
+    getContactInfoById(
         @Param('id') contactInfoId: string,
         @Request() req: any): Promise<ContactInfoEntity> {
         return this.userService.getContactInfoByIdAndUser(contactInfoId, req.user.id);
@@ -150,7 +128,7 @@ export class UserController {
      */
     @Put('contact-info/:id')
     @UseGuards(AuthGuard('jwt'))
-    async updateContactInfoById(
+    updateContactInfoById(
         @Param('id') contactInfoId: string,
         @Body() updateContactInfoDto: UpdateContactInfoDto,
         @Request() req: any
@@ -166,7 +144,7 @@ export class UserController {
      */
     @Delete('contact-info/:id')
     @UseGuards(AuthGuard('jwt'))
-    async delete(
+    delete(
         @Param('id') contactInfoId: string,
         @Request() req: any): Promise<void> {
         return this.userService.deleteContactInfo(contactInfoId, req.user.id);

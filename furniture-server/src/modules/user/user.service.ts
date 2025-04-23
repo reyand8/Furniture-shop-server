@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 
 import { UpdateUserDto } from './dto/updateUser.dto';
-import { EUserRole, UserEntity } from '../../models/user/user.entity';
+import { UserEntity } from '../../models/user/user.entity';
 import { CreateContactInfoDto } from './dto/createСontactInfo.dto';
 import { UpdateContactInfoDto } from './dto/updateContactInfo.dto';
 import { ContactInfoEntity }  from '../../models/contact-info/contact-info.entity';
@@ -17,8 +17,6 @@ import {
     validateDtoFields,
     validateDtoNotEmpty,
     validateIds,
-    validateIsSuperAdmin,
-    validatePermission,
     validateProvidedId,
 } from '../common/validation';
 import { UserRepository } from './repository/user.repository';
@@ -40,15 +38,15 @@ export class UserService {
      * Retrieve all users by role.
      * Validates the requester's role and the provided DTO before querying the repository.
      *
-     * @param role - Role of the requesting user.
      * @param getAllUsersDto - DTO containing filter criteria (e.g. role of users to fetch).
      * @returns A promise resolving to a list of users with partial information.
      * @throws ForbiddenException if access is not allowed.
      * @throws InternalServerErrorException if repository fails.
      */
-    async getAllUsers(role: EUserRole, getAllUsersDto: GetAllUsersDto): Promise<Partial<UserEntity>[]> {
+    getAllUsers(
+        getAllUsersDto: GetAllUsersDto
+    ): Promise<Partial<UserEntity>[]> {
         validateDtoNotEmpty(getAllUsersDto);
-        validatePermission(role, getAllUsersDto.role);
         try {
             return this.userRepository.getAllUsers(getAllUsersDto.role);
         } catch (error) {
@@ -57,52 +55,31 @@ export class UserService {
     }
 
     /**
-     * Update the active status of a user (e.g., activate/deactivate an account).
-     * Only SUPER_ADMIN is allowed to perform this operation.
+     * Updates selected fields (role and/or status) of a user by their ID.
+     * This method assumes role-based access control is handled externally (e.g., by a controller or guard).
      *
-     * @param role - Role of the requesting user.
-     * @param userId - ID of the user to update.
-     * @param isActive - New active status (true/false).
-     * @returns A promise resolving to the updated user entity.
-     * @throws NotFoundException if user is not found.
-     * @throws InternalServerErrorException if repository fails.
+     * @param userId - The ID of the user to update.
+     * @param updateUserRole - DTO containing one or more fields to update (e.g., role, isActive).
+     * @returns A promise that resolves to the updated user entity without the password field.
+     * @throws NotFoundException if the user is not found.
+     * @throws InternalServerErrorException if the update operation fails.
      */
-    async updateUserStatus(role: EUserRole, userId: string, isActive: boolean): Promise<Partial<UserEntity>> {
-        validateIsSuperAdmin(role);
+    async updateUserFields(
+        userId: string,
+        updateUserRole: UpdateUserRoleDto
+    ): Promise<Partial<UserEntity>> {
         try {
             const user: UserEntity | null = await this.userRepository.findById(userId);
             if (!user) {
                 throw new NotFoundException(NOT_FOUND_USER_PROFILE);
             }
-            user.isActive = isActive;
-            const updatedData: UserEntity = await this.userRepository.createAndSave(user);
-            const { password, ...userWithoutPassword } = updatedData;
-            return userWithoutPassword
-        } catch (error) {
-            throw new InternalServerErrorException(ERROR_SERVER, error.message);
-        }
-    }
-
-    /**
-     * Update the role of a user.
-     * This method does not perform a role check; it is assumed to be handled by the controller/guard.
-     *
-     * @param userId - ID of the user to update.
-     * @param updateUserRole - DTO containing the new role.
-     * @returns A promise resolving to the updated user entity.
-     * @throws NotFoundException if user is not found.
-     * @throws InternalServerErrorException if repository fails.
-     */
-    async updateUserRole(userId: string, updateUserRole: UpdateUserRoleDto): Promise<Partial<UserEntity>> {
-        try {
-            const user: UserEntity | null = await this.userRepository.findById(userId);
-            if (!user) {
-                throw new NotFoundException(NOT_FOUND_USER_PROFILE);
-            }
-            user.role = updateUserRole.role;
-            const updatedData: UserEntity = await this.userRepository.createAndSave(user);
-            const { password, ...userWithoutPassword } = updatedData;
-            return userWithoutPassword
+            Object.assign(user, {
+                ...(updateUserRole.role !== undefined && { role: updateUserRole.role }),
+                ...(updateUserRole.isActive !== undefined && { isActive: updateUserRole.isActive }),
+            });
+            const updatedUser: UserEntity = await this.userRepository.createAndSave(user);
+            const { password, ...userWithoutPassword } = updatedUser;
+            return userWithoutPassword;
         } catch (error) {
             throw new InternalServerErrorException(ERROR_SERVER, error.message);
         }
@@ -119,7 +96,7 @@ export class UserService {
      * @param updateUserDto - DTO containing the fields to be updated
      * @returns The updated user entity
      */
-    async updateProfile(
+    updateProfile(
         user: UserEntity,
         updateUserDto: UpdateUserDto
     ): Promise<UserEntity> {
@@ -143,7 +120,7 @@ export class UserService {
      * @param userId - The ID of the user whose contact information is requested
      * @returns A list of contact information associated with the user
      */
-    async getContactInfo(userId: string): Promise<ContactInfoEntity[]> {
+     getContactInfo(userId: string): Promise<ContactInfoEntity[]> {
         validateProvidedId(userId);
         try {
             return this.contactInfoRepository.findAll(userId);
@@ -163,7 +140,7 @@ export class UserService {
      * @param userId - The ID of the user who the contact information belongs to
      * @returns The newly created contact information entity
      */
-    async createContactInfo(
+     createContactInfo(
         createContactInfoDto: CreateContactInfoDto,
         userId: string): Promise<ContactInfoEntity> {
         validateProvidedId(userId);
