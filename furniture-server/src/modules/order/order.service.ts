@@ -17,6 +17,7 @@ import { OrderDetailsFactory } from './factory/orderDetails.factory';
 import {
     validateDtoFields,
     validateDtoNotEmpty,
+    validateProvidedId,
 } from '../common/validation';
 import { ERROR_MESSAGES } from '../common/constants';
 import { UserService } from '../user/user.service';
@@ -124,7 +125,7 @@ export class OrderService {
      * Updates the status of a specific order for the authenticated user.
      * Validates the provided DTO, order ID, and ensures the order belongs to the user.
      *
-     * @param user - The authenticated user who owns the order.
+     * @param userId - The ID of the user.
      * @param updateOrderStatusDto - The DTO containing the new order status.
      * @param orderId - The ID of the order to be updated.
      * @returns A promise that resolves to the updated OrderEntity.
@@ -132,14 +133,14 @@ export class OrderService {
      * @throws InternalServerErrorException if a server error occurs.
      */
     async updateOrderStatus(
-        user: UserEntity,
+        userId: string,
+        orderId: string,
         updateOrderStatusDto: UpdateOrderStatusDto,
-        orderId: string
     ): Promise<OrderEntity> {
-        validateDtoNotEmpty(updateOrderStatusDto);
-        validateDtoNotEmpty(orderId);
+        validateProvidedId(orderId);
+        validateProvidedId(userId);
         try {
-            const order: OrderEntity = await this.findOneOrderByUserId(user.id, orderId);
+            const order: OrderEntity = await this.findOneOrderByUserId(userId, orderId);
             const validatedDto: OrderEntity =
                 validateDtoFields(order, updateOrderStatusDto);
             return this.orderRepository.createAndSaveOrder(validatedDto);
