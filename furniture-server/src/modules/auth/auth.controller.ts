@@ -1,11 +1,10 @@
 import {
-    Body, Controller, Post,
-    UnauthorizedException, UseGuards
+    Body, Controller, Post, UseGuards
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
 import { AuthService } from './auth.service';
-import { ITokens, IUser } from './auth.interface';
+import { ITokens } from './auth.interface';
 import { RegisterUserDto } from './dto/registerUser.dto';
 import { LoginUserDto } from './dto/loginUser.dto';
 import { RegisterByAdminDto } from './dto/registerByAdmin.dto';
@@ -30,8 +29,8 @@ export class AuthController {
     @Post('register-by-admin')
     @Roles(EUserRole.SUPER_ADMIN)
     @UseGuards(AuthGuard('jwt'), RolesGuard)
-    async registerByAdmin(@Body() registerByAdminDto: RegisterByAdminDto): Promise<ITokens> {
-        return await this.authService.register(registerByAdminDto);
+    registerByAdmin(@Body() registerByAdminDto: RegisterByAdminDto): Promise<ITokens> {
+        return this.authService.register(registerByAdminDto);
     }
 
     /**
@@ -41,8 +40,8 @@ export class AuthController {
      * @throws HttpException if validation fails or an error occurs during registration.
      */
     @Post('register')
-    async register(@Body() registerUserDto: RegisterUserDto): Promise<ITokens> {
-        return await this.authService.register(registerUserDto);
+    register(@Body() registerUserDto: RegisterUserDto): Promise<ITokens> {
+        return this.authService.register(registerUserDto);
     }
 
     /**
@@ -53,16 +52,7 @@ export class AuthController {
      * @throws UnauthorizedException if credentials are incorrect.
      */
     @Post('login')
-    async login(@Body() loginUserDto: LoginUserDto): Promise<ITokens> {
-        const { email, password } = loginUserDto;
-
-        const user: IUser | null = await this.authService.validateUser(email, password);
-
-        if (!user) {
-            throw new UnauthorizedException('Invalid credentials');
-        }
-
-        return await this.authService.login(user);
+    login(@Body() loginUserDto: LoginUserDto): Promise<ITokens> {
+        return this.authService.login(loginUserDto);
     }
-
 }
