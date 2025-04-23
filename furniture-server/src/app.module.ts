@@ -7,6 +7,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UserModule } from './modules/user/user.module';
 import { ProductModule } from './modules/product/product.module';
 import { OrderModule } from './modules/order/order.module';
+import { RolesGuard } from './modules/auth/roles-guard/roles.guard';
 
 
 @Module({
@@ -19,7 +20,9 @@ import { OrderModule } from './modules/order/order.module';
     OrderModule
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    RolesGuard
+  ],
 })
 
 export class AppModule {}
