@@ -50,12 +50,12 @@ export class ProductRepository {
 
     /**
      * Finds a product by its ID.
-     * @param id - The ID of the product.
+     * @param productId - The ID of the product.
      * @returns A promise resolving to the ProductEntity or null if not found.
      */
-    findById(id: string): Promise<ProductEntity | null> {
+    findById(productId: string): Promise<ProductEntity | null> {
         return this.productRepo.findOne({
-            where: { id },
+            where: { id: productId },
             relations: ['category'],
         });
     }
