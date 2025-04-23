@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { PassportModule } from '@nestjs/passport';
 
 import { ContactInfoEntity } from '../../models/contact-info/contact-info.entity';
 import { UserEntity } from '../../models/user/user.entity';
@@ -13,6 +14,7 @@ import { AuthService } from './auth.service';
 @Module({
     imports: [
         TypeOrmModule.forFeature([UserEntity, ContactInfoEntity]),
+        PassportModule.register({ defaultStrategy: 'jwt' }),
         JwtModule.registerAsync({
             imports: [ConfigModule],
             useFactory: async (configService: ConfigService) => ({

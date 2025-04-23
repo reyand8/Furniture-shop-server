@@ -101,7 +101,7 @@ export class AuthService {
      * @throws BadRequestException if the value is invalid.
      * @throws NotFoundException if the user is not found.
      */
-    async findBy(field: string, value: string): Promise<UserEntity> {
+    async findBy(field: string, value: string): Promise<Partial<UserEntity>> {
         if (!value) {
             throw new BadRequestException('Invalid value');
         }
@@ -111,7 +111,8 @@ export class AuthService {
         if (!user) {
             throw new NotFoundException(`User with ${field}: ${value} not found`);
         }
-        return user;
+        const { password, ...userWithoutPassword } = user;
+        return userWithoutPassword;
     }
 
     /**
