@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 
 import { UpdateUserDto } from './dto/updateUser.dto';
-import { UserEntity } from '../../models/user/user.entity';
+import { EUserRole, UserEntity } from '../../models/user/user.entity';
 import { CreateContactInfoDto } from './dto/createСontactInfo.dto';
 import { UpdateContactInfoDto } from './dto/updateContactInfo.dto';
 import { ContactInfoEntity }  from '../../models/contact-info/contact-info.entity';
@@ -17,13 +17,17 @@ import {
     validateDtoFields,
     validateDtoNotEmpty,
     validateIds,
+    validateIsSuperAdmin,
+    validatePermission,
     validateProvidedId,
 } from '../common/validation';
 import { UserRepository } from './repository/user.repository';
 import { ContactInfoRepository } from './repository/contactInfo.repository';
+import { GetAllUsersDto } from './dto/getAllUsers.dto';
+import { UpdateUserRoleDto } from './dto/updateUserRole.dto';
 
 
-const { ERROR_SERVER, NOT_FOUND_CONTACT_INFO } = ERROR_MESSAGES;
+const { ERROR_SERVER, NOT_FOUND_CONTACT_INFO, NOT_FOUND_USER_PROFILE } = ERROR_MESSAGES;
 
 @Injectable()
 export class UserService {
@@ -31,6 +35,78 @@ export class UserService {
         private readonly userRepository: UserRepository,
         private readonly contactInfoRepository: ContactInfoRepository,
     ) {}
+
+    /**
+     * Retrieve all users by role.
+     * Validates the requester's role and the provided DTO before querying the repository.
+     *
+     * @param role - Role of the requesting user.
+     * @param getAllUsersDto - DTO containing filter criteria (e.g. role of users to fetch).
+     * @returns A promise resolving to a list of users with partial information.
+     * @throws ForbiddenException if access is not allowed.
+     * @throws InternalServerErrorException if repository fails.
+     */
+    async getAllUsers(role: EUserRole, getAllUsersDto: GetAllUsersDto): Promise<Partial<UserEntity>[]> {
+        validateDtoNotEmpty(getAllUsersDto);
+        validatePermission(role, getAllUsersDto.role);
+        try {
+            return this.userRepository.getAllUsers(getAllUsersDto.role);
+        } catch (error) {
+            throw new InternalServerErrorException(ERROR_SERVER, error.message);
+        }
+    }
+
+    /**
+     * Update the active status of a user (e.g., activate/deactivate an account).
+     * Only SUPER_ADMIN is allowed to perform this operation.
+     *
+     * @param role - Role of the requesting user.
+     * @param userId - ID of the user to update.
+     * @param isActive - New active status (true/false).
+     * @returns A promise resolving to the updated user entity.
+     * @throws NotFoundException if user is not found.
+     * @throws InternalServerErrorException if repository fails.
+     */
+    async updateUserStatus(role: EUserRole, userId: string, isActive: boolean): Promise<Partial<UserEntity>> {
+        validateIsSuperAdmin(role);
+        try {
+            const user: UserEntity | null = await this.userRepository.findById(userId);
+            if (!user) {
+                throw new NotFoundException(NOT_FOUND_USER_PROFILE);
+            }
+            user.isActive = isActive;
+            const updatedData: UserEntity = await this.userRepository.createAndSave(user);
+            const { password, ...userWithoutPassword } = updatedData;
+            return userWithoutPassword
+        } catch (error) {
+            throw new InternalServerErrorException(ERROR_SERVER, error.message);
+        }
+    }
+
+    /**
+     * Update the role of a user.
+     * This method does not perform a role check; it is assumed to be handled by the controller/guard.
+     *
+     * @param userId - ID of the user to update.
+     * @param updateUserRole - DTO containing the new role.
+     * @returns A promise resolving to the updated user entity.
+     * @throws NotFoundException if user is not found.
+     * @throws InternalServerErrorException if repository fails.
+     */
+    async updateUserRole(userId: string, updateUserRole: UpdateUserRoleDto): Promise<Partial<UserEntity>> {
+        try {
+            const user: UserEntity | null = await this.userRepository.findById(userId);
+            if (!user) {
+                throw new NotFoundException(NOT_FOUND_USER_PROFILE);
+            }
+            user.role = updateUserRole.role;
+            const updatedData: UserEntity = await this.userRepository.createAndSave(user);
+            const { password, ...userWithoutPassword } = updatedData;
+            return userWithoutPassword
+        } catch (error) {
+            throw new InternalServerErrorException(ERROR_SERVER, error.message);
+        }
+    }
 
     /**
      * Updates the given user's information with provided data.

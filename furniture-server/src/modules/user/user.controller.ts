@@ -6,15 +6,75 @@ import { AuthGuard } from '@nestjs/passport';
 
 import { UserService } from './user.service';
 import { UpdateUserDto } from './dto/updateUser.dto';
-import { UserEntity } from '../../models/user/user.entity';
+import { EUserRole, UserEntity } from '../../models/user/user.entity';
 import { CreateContactInfoDto } from './dto/createСontactInfo.dto';
 import { UpdateContactInfoDto } from './dto/updateContactInfo.dto';
 import { ContactInfoEntity } from '../../models/contact-info/contact-info.entity';
+import { Roles } from '../auth/roles-guard/roles.decorator';
+import { RolesGuard } from '../auth/roles-guard/roles.guard';
+import { GetAllUsersDto } from './dto/getAllUsers.dto';
+import { UpdateUserRoleDto } from './dto/updateUserRole.dto';
 
 
 @Controller('users')
 export class UserController {
     constructor(private readonly userService: UserService) {}
+
+    /**
+     * Get a list of all users.
+     * Accessible by SUPER_ADMIN and ADMIN roles.
+     *
+     * @param req - The request object containing the authenticated user's info.
+     * @param getAllUsersDto - DTO with filtering or pagination options for user list.
+     * @returns A promise resolving to a list of users with partial information.
+     */
+    @Get('all-users')
+    @Roles(EUserRole.SUPER_ADMIN, EUserRole.ADMIN)
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
+    getAllUsers(
+        @Request() req: any,
+        @Body() getAllUsersDto: GetAllUsersDto
+    ): Promise<Partial<UserEntity>[]> {
+        return this.userService.getAllUsers(req.user.role, getAllUsersDto);
+    }
+
+    /**
+     * Update the role of a specific user.
+     * Accessible only by SUPER_ADMIN.
+     *
+     * @param userId - ID of the user whose role is being updated.
+     * @param updateUserRoleDto - DTO containing the new role.
+     * @returns A promise resolving to the updated user with partial information.
+     */
+    @Put('update-role/:id')
+    @Roles(EUserRole.SUPER_ADMIN)
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
+    async updateUserRole(
+        @Param('id') userId: string,
+        @Body() updateUserRoleDto: UpdateUserRoleDto
+    ): Promise<Partial<UserEntity>> {
+        return this.userService.updateUserRole(userId, updateUserRoleDto);
+    }
+
+    /**
+     * Update the active status of a specific user (e.g., activate or deactivate account).
+     * Accessible only by SUPER_ADMIN.
+     *
+     * @param req - The request object containing the authenticated user's info.
+     * @param userId - ID of the user whose status is being updated.
+     * @param body - An object containing the new `isActive` status.
+     * @returns A promise resolving to the updated user with partial information.
+     */
+    @Put('update-status/:id')
+    @Roles(EUserRole.SUPER_ADMIN)
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
+    async updateUserStatus(
+        @Request() req: any,
+        @Param('id') userId: string,
+        @Body() body: { isActive: boolean }
+    ): Promise<Partial<UserEntity>> {
+        return this.userService.updateUserStatus(req.user.role, userId, body.isActive);
+    }
 
     /**
      * Get the profile of the currently authenticated user.
@@ -23,9 +83,8 @@ export class UserController {
      */
     @Get('me')
     @UseGuards(AuthGuard('jwt'))
-    getProfile(@Request() req: any): Promise<Omit<UserEntity, 'password'>> {
-        const { password, ...userWithoutPassword } = req.user;
-        return userWithoutPassword;
+    getProfile(@Request() req: any): Promise<Partial<UserEntity>> {
+        return req.user;
     }
 
     /**
@@ -36,9 +95,11 @@ export class UserController {
      */
     @Put('me')
     @UseGuards(AuthGuard('jwt'))
-    async updateProfile(@Body() updateUserDto: UpdateUserDto, @Request() req: any): Promise<UserEntity> {
-        const { password, ...userWithoutPassword } = req.user;
-        return this.userService.updateProfile(userWithoutPassword, updateUserDto);
+    async updateProfile(
+        @Body() updateUserDto: UpdateUserDto,
+        @Request() req: any
+    ): Promise<Partial<UserEntity>> {
+        return this.userService.updateProfile(req.user, updateUserDto);
     }
 
     /**
