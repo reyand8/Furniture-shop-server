@@ -36,8 +36,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
      * @returns The user entity associated with the JWT.
      * @throws UnauthorizedException if the user is not found.
      */
-    async validate(payload: any): Promise<UserEntity> {
-        const user: UserEntity = await this.authService.findBy('id', payload.sub);
+    async validate(payload: any): Promise<Partial<UserEntity>> {
+        const user: Partial<UserEntity>  = await this.authService.findBy('id', payload.sub);
         if (!user) {
             throw new UnauthorizedException('User not found');
         }
