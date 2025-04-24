@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { UserEntity } from '../../../models/user/user.entity';
+import { EUserRole, UserEntity } from '../../../models/user/user.entity';
 
 
 @Injectable()
@@ -13,13 +13,36 @@ export class UserRepository {
     ) {}
 
     /**
+     * Finds all users by role.
+     * @param role - The role.
+     * @returns A promise resolving to the UserEntity or null if not found.
+     */
+    async getAllUsers(role: EUserRole): Promise<Partial<UserEntity>[]>  {
+        const users: UserEntity[] = await this.userRepo.find({
+            where: { role: role },
+        });
+        return users.map(({ password, ...rest }: UserEntity): Partial<UserEntity> => rest);
+    }
+
+    /**
+     * Finds a user by ID.
+     * @param userId - The ID of the user.
+     * @returns A promise resolving to the UserEntity or null if not found.
+     */
+    async findById(userId: string): Promise<UserEntity | null> {
+        return this.userRepo.findOne({
+            where: { id: userId },
+        });
+    }
+
+    /**
      * Creates a new user entity instance with the provided data
      * and saves it to the database.
      *
      * @param data - Partial user data to create the entity.
      * @returns A promise that resolves to the saved UserEntity.
      */
-    createAndSave(data: Partial<UserEntity>): Promise<UserEntity> {
+    async createAndSave(data: Partial<UserEntity>): Promise<UserEntity> {
         const profileData: UserEntity = this.userRepo.create(data);
         return this.userRepo.save(profileData);
     }

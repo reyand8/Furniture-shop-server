@@ -9,6 +9,9 @@ import { OrderEntity } from '../../models/order/order.entity';
 import { CreateOrderDto } from './dto/createOrder.dto';
 import { UpdateOrderDto } from './dto/updateOrder.dto';
 import { UpdateOrderStatusDto } from './dto/updateOrderStatus.dto';
+import { Roles } from '../auth/roles-guard/roles.decorator';
+import { EUserRole } from '../../models/user/user.entity';
+import { RolesGuard } from '../auth/roles-guard/roles.guard';
 
 
 @Controller('orders')
@@ -25,7 +28,7 @@ export class OrderController {
      */
     @Post()
     @UseGuards(AuthGuard('jwt'))
-    create(
+    async create(
         @Body() createOrderDto: CreateOrderDto,
         @Request() req: any
     ): Promise<OrderEntity> {
@@ -41,7 +44,7 @@ export class OrderController {
      */
     @Get()
     @UseGuards(AuthGuard('jwt'))
-    findAll(@Request() req: any): Promise<OrderEntity[]> {
+    async findAll(@Request() req: any): Promise<OrderEntity[]> {
         return this.orderService.findAll(req.user);
     }
 
@@ -55,7 +58,7 @@ export class OrderController {
      */
     @Get(':id')
     @UseGuards(AuthGuard('jwt'))
-    findOne(
+    async findOne(
         @Param('id') id: string,
         @Request() req: any
     ): Promise<OrderEntity> {
@@ -66,19 +69,18 @@ export class OrderController {
      * Updates the status of an existing order by its ID for the authenticated user.
      * Requires JWT authentication.
      *
-     * @param id - The ID of the order to update
+     * @param orderId - The ID of the order to update
      * @param updateOrderStatusDto - The DTO containing the updated order status
-     * @param req - The request object, containing authenticated user info
      * @returns The updated OrderEntity
      */
-    @Post('update-status/:id')
-    @UseGuards(AuthGuard('jwt'))
-    updateOrderStatus(
-        @Param('id') id: string,
+    @Post('update-status/:orderId')
+    @Roles(EUserRole.SUPER_ADMIN, EUserRole.ADMIN)
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
+    async updateOrderStatus(
+        @Param('orderId') orderId: string,
         @Body() updateOrderStatusDto: UpdateOrderStatusDto,
-        @Request() req: any
     ): Promise<OrderEntity> {
-        return this.orderService.updateOrderStatus(req.user.id, updateOrderStatusDto, id);
+        return this.orderService.updateOrderStatus(orderId, updateOrderStatusDto);
     }
 
     /**
@@ -92,7 +94,7 @@ export class OrderController {
      */
     @Put('update/:id')
     @UseGuards(AuthGuard('jwt'))
-    updateOrder(
+    async updateOrder(
         @Param('id') id: string,
         @Body() updateOrderDto: UpdateOrderDto,
         @Request() req: any

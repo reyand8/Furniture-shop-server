@@ -21,9 +21,11 @@ import {
 } from '../common/validation';
 import { UserRepository } from './repository/user.repository';
 import { ContactInfoRepository } from './repository/contactInfo.repository';
+import { GetAllUsersDto } from './dto/getAllUsers.dto';
+import { UpdateUserFieldsDto } from './dto/updateUserFields.dto';
 
 
-const { ERROR_SERVER, NOT_FOUND_CONTACT_INFO } = ERROR_MESSAGES;
+const { ERROR_SERVER, NOT_FOUND_CONTACT_INFO, NOT_FOUND_USER_PROFILE } = ERROR_MESSAGES;
 
 @Injectable()
 export class UserService {
@@ -31,6 +33,58 @@ export class UserService {
         private readonly userRepository: UserRepository,
         private readonly contactInfoRepository: ContactInfoRepository,
     ) {}
+
+    /**
+     * Retrieve all users by role.
+     * Validates the requester's role and the provided DTO before querying the repository.
+     *
+     * @param getAllUsersDto - DTO containing filter criteria (e.g. role of users to fetch).
+     * @returns A promise resolving to a list of users with partial information.
+     * @throws ForbiddenException if access is not allowed.
+     * @throws InternalServerErrorException if repository fails.
+     */
+    async getAllUsers(
+        getAllUsersDto: GetAllUsersDto
+    ): Promise<Partial<UserEntity>[]> {
+        validateDtoNotEmpty(getAllUsersDto);
+        try {
+            return this.userRepository.getAllUsers(getAllUsersDto.role);
+        } catch (error) {
+            throw new InternalServerErrorException(ERROR_SERVER, error.message);
+        }
+    }
+
+    /**
+     * Updates selected fields (role and/or status) of a user by their ID.
+     * This method assumes role-based access control is handled externally (e.g., by a controller or guard).
+     *
+     * @param userId - The ID of the user to update.
+     * @param updateUserFieldsDto - DTO containing one or more fields to update (e.g., role, isActive).
+     * @returns A promise that resolves to the updated user entity without the password field.
+     * @throws NotFoundException if the user is not found.
+     * @throws InternalServerErrorException if the update operation fails.
+     */
+    async updateUserFields(
+        userId: string,
+        updateUserFieldsDto: UpdateUserFieldsDto
+    ): Promise<Partial<UserEntity>> {
+        try {
+            const user: UserEntity | null = await this.userRepository.findById(userId);
+            if (!user) {
+                throw new NotFoundException(NOT_FOUND_USER_PROFILE);
+            }
+            for (const key in updateUserFieldsDto) {
+                if (updateUserFieldsDto[key] !== undefined) {
+                    user[key] = updateUserFieldsDto[key];
+                }
+            }
+            const updatedUser: UserEntity = await this.userRepository.createAndSave(user);
+            const { password, ...userWithoutPassword } = updatedUser;
+            return userWithoutPassword;
+        } catch (error) {
+            throw new InternalServerErrorException(ERROR_SERVER, error.message);
+        }
+    }
 
     /**
      * Updates the given user's information with provided data.

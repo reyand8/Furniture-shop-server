@@ -1,11 +1,16 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, ExtractJwt } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 
 import { UserEntity } from '../../../models/user/user.entity';
 import { AuthService } from '../auth.service';
+import { ERROR_MESSAGES } from '../../common/constants'
 
+const {
+    INACTIVE_USER_PROFILE,
+    NOT_FOUND_USER_PROFILE
+} = ERROR_MESSAGES
 
 /**
  * Strategy for validating JWT tokens using Passport.
@@ -36,10 +41,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
      * @returns The user entity associated with the JWT.
      * @throws UnauthorizedException if the user is not found.
      */
-    async validate(payload: any): Promise<UserEntity> {
-        const user: UserEntity = await this.authService.findBy('id', payload.sub);
+    async validate(payload: any): Promise<Partial<UserEntity>> {
+        const user: Partial<UserEntity>  = await this.authService.findBy('id', payload.sub);
         if (!user) {
-            throw new UnauthorizedException('User not found');
+            throw new UnauthorizedException(NOT_FOUND_USER_PROFILE);
+        }
+        if (!user.isActive) {
+            throw new ForbiddenException(INACTIVE_USER_PROFILE);
         }
         return user;
     }

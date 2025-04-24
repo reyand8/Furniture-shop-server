@@ -21,7 +21,7 @@ export class ProductRepository {
      * @param take - Number of records to return.
      * @returns A promise resolving to a tuple of products and total count.
      */
-    findPaginated(
+    async findPaginated(
         where: IWhereCondition,
         skip: number,
         take: number,
@@ -40,7 +40,7 @@ export class ProductRepository {
      * @param createProductDto - DTO containing product data.
      * @returns A promise resolving to the created ProductEntity.
      */
-    createProduct(createProductDto: CreateProductDto): Promise<ProductEntity> {
+    async createProduct(createProductDto: CreateProductDto): Promise<ProductEntity> {
         const product: ProductEntity = this.productRepo.create({
             ...createProductDto,
             category: { id: createProductDto.categoryId }
@@ -50,12 +50,12 @@ export class ProductRepository {
 
     /**
      * Finds a product by its ID.
-     * @param id - The ID of the product.
+     * @param productId - The ID of the product.
      * @returns A promise resolving to the ProductEntity or null if not found.
      */
-    findById(id: string): Promise<ProductEntity | null> {
+    async findById(productId: string): Promise<ProductEntity | null> {
         return this.productRepo.findOne({
-            where: { id },
+            where: { id: productId },
             relations: ['category'],
         });
     }
@@ -65,7 +65,7 @@ export class ProductRepository {
      * @param product - The product entity to update.
      * @returns A promise resolving to the updated ProductEntity.
      */
-    update(product: ProductEntity): Promise<ProductEntity> {
+    async update(product: ProductEntity): Promise<ProductEntity> {
         return this.productRepo.save(product);
     }
 
@@ -74,7 +74,7 @@ export class ProductRepository {
      * @param productId - The ID of the product to delete.
      * @returns A promise resolving to the result of the deletion.
      */
-    removeProduct(productId: string): Promise<DeleteResult> {
+    async removeProduct(productId: string): Promise<DeleteResult> {
         return this.productRepo.delete(productId);
     }
 
@@ -83,7 +83,7 @@ export class ProductRepository {
      * @param type - The type of the products.
      * @returns A promise resolving to an array of ProductEntity.
      */
-    findByType(type: ProductType): Promise<ProductEntity[]> {
+    async findByType(type: ProductType): Promise<ProductEntity[]> {
         return this.productRepo.find({
             where: { type },
             relations: ['category'],
@@ -96,7 +96,7 @@ export class ProductRepository {
      * @param productName - The name to search for.
      * @returns A promise resolving to an array of ProductEntity.
      */
-    searchByName(productName: string): Promise<ProductEntity[]> {
+    async searchByName(productName: string): Promise<ProductEntity[]> {
         return this.productRepo.find({
             where: { name: ILike(`%${productName}%`) },
             relations: ['category'],
@@ -107,7 +107,7 @@ export class ProductRepository {
      * Retrieves products marked as bestsellers.
      * @returns A promise resolving to an array of ProductEntity.
      */
-    findTopSellers(): Promise<ProductEntity[]> {
+    async findTopSellers(): Promise<ProductEntity[]> {
         return this.productRepo.find({
             where: { isBestSeller: true },
             relations: ['category'],
@@ -120,7 +120,7 @@ export class ProductRepository {
      * @param productIds - An array of product IDs to find.
      * @returns A promise that resolves to an array of found ProductEntity objects.
      */
-    findProductsByIds(productIds: string[]): Promise<ProductEntity[]> {
+    async findProductsByIds(productIds: string[]): Promise<ProductEntity[]> {
         return this.productRepo.find({
             where: { id: In(productIds)}
         });

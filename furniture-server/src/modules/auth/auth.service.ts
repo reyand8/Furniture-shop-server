@@ -1,6 +1,7 @@
 import {
-    BadRequestException, HttpStatus,
-    Injectable, NotFoundException } from '@nestjs/common';
+    BadRequestException, ForbiddenException, HttpStatus,
+    Injectable, NotFoundException, UnauthorizedException
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { Repository } from 'typeorm';
@@ -8,6 +9,13 @@ import * as bcrypt from 'bcryptjs';
 
 import { ITokens, IUser, IUserRegister } from './auth.interface';
 import { UserEntity } from '../../models/user/user.entity';
+import { LoginUserDto } from './dto/loginUser.dto';
+import {ERROR_MESSAGES} from '../common/constants';
+
+const {
+    INACTIVE_USER_PROFILE,
+    INVALID_CREDENTIALS
+} = ERROR_MESSAGES
 
 
 @Injectable()
@@ -77,14 +85,27 @@ export class AuthService {
     }
 
     /**
-     * Logs in a user by generating access and refresh tokens.
-     * @param loginUser - The user data used to log in.
-     * @returns The access and refresh tokens for the user.
+     * Authenticates a user and generates access and refresh tokens.
+     *
+     * Validates the user's credentials and active status. Throws an exception
+     * if authentication fails or the user is inactive.
+     *
+     * @param loginUserDto - DTO containing the user's email and password.
+     * @returns An object containing the access and refresh tokens.
+     * @throws UnauthorizedException if credentials are invalid.
+     * @throws ForbiddenException if the user account is inactive.
      */
-    async login(loginUser: IUser): Promise<ITokens> {
-        const { email, id, role } = loginUser;
+    async login(loginUserDto: LoginUserDto): Promise<ITokens> {
+        const { email, password } = loginUserDto;
+        const user: IUser | null = await this.validateUser(email, password);
+        if (!user) {
+            throw new UnauthorizedException(INVALID_CREDENTIALS);
+        }
+        if (!user.isActive) {
+            throw new ForbiddenException(INACTIVE_USER_PROFILE);
+        }
         const payload: { email: string; sub: string, role: string } =
-            { email: email, sub: id, role: role };
+            { email: user.email, sub: user.id, role: user.role };
         return {
             access_token: this.jwtService.sign(payload),
             refresh_token: this.jwtService.sign(payload, {
@@ -101,7 +122,7 @@ export class AuthService {
      * @throws BadRequestException if the value is invalid.
      * @throws NotFoundException if the user is not found.
      */
-    async findBy(field: string, value: string): Promise<UserEntity> {
+    async findBy(field: string, value: string): Promise<Partial<UserEntity>> {
         if (!value) {
             throw new BadRequestException('Invalid value');
         }
@@ -111,7 +132,8 @@ export class AuthService {
         if (!user) {
             throw new NotFoundException(`User with ${field}: ${value} not found`);
         }
-        return user;
+        const { password, ...userWithoutPassword } = user;
+        return userWithoutPassword;
     }
 
     /**

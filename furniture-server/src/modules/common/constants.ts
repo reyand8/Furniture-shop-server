@@ -29,13 +29,18 @@ export const ERROR_MESSAGES = {
     INVALID_PRODUCT_ID: 'Invalid product id format',
     INVALID_ORDER_ID: 'Invalid order id format',
     INVALID_PRODUCT_TYPE: 'Invalid product type',
+    INVALID_CREDENTIALS: 'Invalid credentials',
 
     ERROR_SERVER: 'Internal server error:',
     ERROR_PERMISSION_ORDER_UPDATE: 'You cannot perform this action',
     EXISTS_CATEGORY_NAME: 'Category name exists',
     UNAVAILABLE_PRODUCTS: 'There are some unavailable products:',
 
+    INACTIVE_USER_PROFILE: 'User profile is inactive',
+
     INVALID_PAGE: 'Page must be greater than 0',
     INVALID_PAGE_SIZE: 'Page size must be greater than 0',
     PAGE_GREATER_THAN_SIZE: 'Page cannot be greater than page size',
+
+    FORBIDDEN_ACCESS: 'Only super admin can perform this action',
 };

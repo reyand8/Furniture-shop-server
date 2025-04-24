@@ -1,20 +1,58 @@
 import {
     Controller, Get, Body,
-    Request, Put, UseGuards, Post, Delete, Param
+    Request, Put, UseGuards, Post, Delete, Param, Query, UseInterceptors
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
 import { UserService } from './user.service';
 import { UpdateUserDto } from './dto/updateUser.dto';
-import { UserEntity } from '../../models/user/user.entity';
+import { EUserRole, UserEntity } from '../../models/user/user.entity';
 import { CreateContactInfoDto } from './dto/createСontactInfo.dto';
 import { UpdateContactInfoDto } from './dto/updateContactInfo.dto';
 import { ContactInfoEntity } from '../../models/contact-info/contact-info.entity';
+import { Roles } from '../auth/roles-guard/roles.decorator';
+import { RolesGuard } from '../auth/roles-guard/roles.guard';
+import { GetAllUsersDto } from './dto/getAllUsers.dto';
+import { UpdateUserFieldsDto } from './dto/updateUserFields.dto';
 
 
 @Controller('users')
 export class UserController {
     constructor(private readonly userService: UserService) {}
+
+    /**
+     * Get a list of all users.
+     * Accessible by SUPER_ADMIN and ADMIN roles.
+     *
+     * @param getAllUsersDto - DTO with filtering or pagination options for user list.
+     * @returns A promise resolving to a list of users with partial information.
+     */
+    @Get()
+    @Roles(EUserRole.SUPER_ADMIN, EUserRole.ADMIN)
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
+    async getAllUsers(
+        @Query() getAllUsersDto: GetAllUsersDto
+    ): Promise<Partial<UserEntity>[]> {
+        return this.userService.getAllUsers(getAllUsersDto);
+    }
+
+    /**
+     * Update the role of a specific user.
+     * Accessible only by SUPER_ADMIN.
+     *
+     * @param userId - ID of the user whose role is being updated.
+     * @param updateUserRoleDto - DTO containing the new role.
+     * @returns A promise resolving to the updated user with partial information.
+     */
+    @Put(':id')
+    @Roles(EUserRole.SUPER_ADMIN)
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
+    async updateUserFields(
+        @Param('id') userId: string,
+        @Body() updateUserRoleDto: UpdateUserFieldsDto
+    ): Promise<Partial<UserEntity>> {
+        return this.userService.updateUserFields(userId, updateUserRoleDto);
+    }
 
     /**
      * Get the profile of the currently authenticated user.
@@ -23,9 +61,8 @@ export class UserController {
      */
     @Get('me')
     @UseGuards(AuthGuard('jwt'))
-    getProfile(@Request() req: any): Promise<Omit<UserEntity, 'password'>> {
-        const { password, ...userWithoutPassword } = req.user;
-        return userWithoutPassword;
+    async getProfile(@Request() req: any): Promise<Partial<UserEntity>> {
+        return req.user;
     }
 
     /**
@@ -36,9 +73,11 @@ export class UserController {
      */
     @Put('me')
     @UseGuards(AuthGuard('jwt'))
-    async updateProfile(@Body() updateUserDto: UpdateUserDto, @Request() req: any): Promise<UserEntity> {
-        const { password, ...userWithoutPassword } = req.user;
-        return this.userService.updateProfile(userWithoutPassword, updateUserDto);
+    async updateProfile(
+        @Body() updateUserDto: UpdateUserDto,
+        @Request() req: any
+    ): Promise<Partial<UserEntity>> {
+        return this.userService.updateProfile(req.user, updateUserDto);
     }
 
     /**

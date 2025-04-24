@@ -19,7 +19,7 @@ export class OrderRepository {
      * @param userId - The ID of the user whose orders are being retrieved
      * @returns An array of OrderEntity objects with related data
      */
-    getAllOrders(userId: string): Promise<OrderEntity[]> {
+    async getAllOrders(userId: string): Promise<OrderEntity[]> {
        return this.orderRepo.find({
             where: {
                 user: { id: userId },
@@ -48,12 +48,28 @@ export class OrderRepository {
     }
 
     /**
+     * Retrieves a specific order by its ID for a given user, including related entities.
+     * Throws an error if the order is not found or does not belong to the user.
+     *
+     * @param orderId - The ID of the order to retrieve
+     * @returns The found OrderEntity with related data
+     */
+    async getOneOrderByOrderId(orderId: string): Promise<OrderEntity | null> {
+        return await this.orderRepo.findOne({
+            where: {
+                id: orderId,
+            },
+            relations: ['orderItems', 'user', 'contactInfo'],
+        });
+    }
+
+    /**
      * Creates a new order entity from the provided data and saves it to the database.
      *
      * @param order - The order entity to save
      * @returns The saved OrderEntity
      */
-    createAndSaveOrder(order: Partial<OrderEntity>): Promise<OrderEntity> {
+    async createAndSaveOrder(order: Partial<OrderEntity>): Promise<OrderEntity> {
         const createOrder: OrderEntity = this.orderRepo.create(order);
         return this.orderRepo.save(createOrder);
     }

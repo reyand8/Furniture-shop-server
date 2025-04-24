@@ -17,6 +17,7 @@ import { OrderDetailsFactory } from './factory/orderDetails.factory';
 import {
     validateDtoFields,
     validateDtoNotEmpty,
+    validateProvidedId,
 } from '../common/validation';
 import { ERROR_MESSAGES } from '../common/constants';
 import { UserService } from '../user/user.service';
@@ -107,12 +108,15 @@ export class OrderService {
      * @throws InternalServerErrorException if a server error occurs.
      */
     async findOneOrderByUserId(userId: string, orderId: string): Promise<OrderEntity> {
-        validateDtoNotEmpty(orderId);
+        validateProvidedId(orderId);
         try {
             const order: OrderEntity | null =
                 await this.orderRepository.getOneOrderByUser(userId, orderId);
             if (!order) {
                 throw new NotFoundException(NOT_FOUND_ORDER);
+            }
+            if (order.user) {
+                delete (order.user as Partial<UserEntity>).password;
             }
             return order;
         } catch (error) {
@@ -124,7 +128,6 @@ export class OrderService {
      * Updates the status of a specific order for the authenticated user.
      * Validates the provided DTO, order ID, and ensures the order belongs to the user.
      *
-     * @param user - The authenticated user who owns the order.
      * @param updateOrderStatusDto - The DTO containing the new order status.
      * @param orderId - The ID of the order to be updated.
      * @returns A promise that resolves to the updated OrderEntity.
@@ -132,17 +135,23 @@ export class OrderService {
      * @throws InternalServerErrorException if a server error occurs.
      */
     async updateOrderStatus(
-        user: UserEntity,
+        orderId: string,
         updateOrderStatusDto: UpdateOrderStatusDto,
-        orderId: string
     ): Promise<OrderEntity> {
-        validateDtoNotEmpty(updateOrderStatusDto);
-        validateDtoNotEmpty(orderId);
+        validateProvidedId(orderId);
         try {
-            const order: OrderEntity = await this.findOneOrderByUserId(user.id, orderId);
+            const order: OrderEntity | null = await this.orderRepository.getOneOrderByOrderId(orderId);
+            if (!order) {
+                throw new NotFoundException(NOT_FOUND_ORDER);
+            }
             const validatedDto: OrderEntity =
                 validateDtoFields(order, updateOrderStatusDto);
-            return this.orderRepository.createAndSaveOrder(validatedDto);
+
+            const updatedOrderStatus: OrderEntity = await this.orderRepository.createAndSaveOrder(validatedDto);
+            if (updatedOrderStatus.user) {
+                delete (updatedOrderStatus.user as Partial<UserEntity>).password;
+            }
+            return updatedOrderStatus;
         } catch (error) {
             throw new InternalServerErrorException(ERROR_SERVER, error.message);
         }
@@ -163,7 +172,7 @@ export class OrderService {
     async updateOrder( user: UserEntity, updateOrderDto: UpdateOrderDto, orderId: string
     ): Promise<OrderEntity> {
         validateDtoNotEmpty(updateOrderDto);
-        validateDtoNotEmpty(orderId);
+        validateProvidedId(orderId);
         try {
             const { contactInfoId } = updateOrderDto
             const order: OrderEntity = await this.findOneOrderByUserId(user.id, orderId);

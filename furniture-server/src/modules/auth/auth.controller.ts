@@ -1,9 +1,16 @@
-import { Body, Controller, Post, UnauthorizedException } from '@nestjs/common';
+import {
+    Body, Controller, Post, UseGuards
+} from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 
 import { AuthService } from './auth.service';
-import { ITokens, IUser } from './auth.interface';
+import { ITokens } from './auth.interface';
 import { RegisterUserDto } from './dto/registerUser.dto';
 import { LoginUserDto } from './dto/loginUser.dto';
+import { RegisterByAdminDto } from './dto/registerByAdmin.dto';
+import { Roles } from './roles-guard/roles.decorator';
+import { EUserRole } from '../../models/user/user.entity';
+import { RolesGuard } from './roles-guard/roles.guard';
 
 
 /**
@@ -14,6 +21,19 @@ export class AuthController {
     constructor(private readonly authService: AuthService) {}
 
     /**
+     * Handles the registration of a new admin.
+     * @param registerByAdminDto - Data Transfer Object containing registration details.
+     * @returns A Promise containing access and refresh tokens.
+     * @throws HttpException if validation fails or an error occurs during registration.
+     */
+    @Post('register-by-admin')
+    @Roles(EUserRole.SUPER_ADMIN)
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
+    async registerByAdmin(@Body() registerByAdminDto: RegisterByAdminDto): Promise<ITokens> {
+        return this.authService.register(registerByAdminDto);
+    }
+
+    /**
      * Handles the registration of a new user.
      * @param registerUserDto - Data Transfer Object containing registration details.
      * @returns A Promise containing access and refresh tokens.
@@ -21,7 +41,7 @@ export class AuthController {
      */
     @Post('register')
     async register(@Body() registerUserDto: RegisterUserDto): Promise<ITokens> {
-        return await this.authService.register(registerUserDto);
+        return this.authService.register(registerUserDto);
     }
 
     /**
@@ -33,15 +53,6 @@ export class AuthController {
      */
     @Post('login')
     async login(@Body() loginUserDto: LoginUserDto): Promise<ITokens> {
-        const { email, password } = loginUserDto;
-
-        const user: IUser | null = await this.authService.validateUser(email, password);
-
-        if (!user) {
-            throw new UnauthorizedException('Invalid credentials');
-        }
-
-        return await this.authService.login(user);
+        return this.authService.login(loginUserDto);
     }
-
 }

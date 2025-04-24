@@ -1,7 +1,8 @@
 import {
-    Body, Controller, Delete,
-    Get, Param, Post, Put, Query
+    Body, Controller, Delete, Get,
+    Param, Post, Put, Query, UseGuards
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 
 import { ProductService } from './product.service';
 import { CreateCategoryDto } from './dto/createCategory.dto';
@@ -11,6 +12,9 @@ import { ProductEntity, ProductType } from '../../models/product/product.entity'
 import { CreateProductDto } from './dto/createProduct.dto';
 import { UpdateProductDto } from './dto/updateProduct.dto';
 import { GetProductsQueryDto } from './dto/getProductsQuery.dto';
+import { Roles } from '../auth/roles-guard/roles.decorator';
+import { EUserRole } from '../../models/user/user.entity';
+import { RolesGuard } from '../auth/roles-guard/roles.guard';
 
 
 @Controller('catalog')
@@ -41,6 +45,8 @@ export class ProductController {
      * @returns {Promise<CategoryEntity>} The created category.
      */
     @Post('category')
+    @Roles(EUserRole.ADMIN, EUserRole.SUPER_ADMIN)
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
     async createCategory(@Body() createCategoryDto: CreateCategoryDto): Promise<CategoryEntity> {
         return this.productService.createCategory(createCategoryDto.name);
     }
@@ -51,6 +57,8 @@ export class ProductController {
      * @returns {Promise<void>} A promise indicating the deletion status.
      */
     @Delete('category/:id')
+    @Roles(EUserRole.ADMIN, EUserRole.SUPER_ADMIN)
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
     async deleteCategory(@Param('id') id: string): Promise<void> {
         return this.productService.deleteCategory(id);
     }
@@ -62,6 +70,8 @@ export class ProductController {
      * @returns {Promise<CategoryEntity>} The updated category.
      */
     @Put('category/:id')
+    @Roles(EUserRole.ADMIN, EUserRole.SUPER_ADMIN)
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
     async updateCategory(
         @Param('id') id: string,
         @Body() updateCategoryDto: UpdateCategoryDto
@@ -94,6 +104,8 @@ export class ProductController {
      * @returns {Promise<ProductEntity>} The created product.
      */
     @Post('product')
+    @Roles(EUserRole.ADMIN, EUserRole.SUPER_ADMIN)
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
     async createProduct(@Body() createProductDto: CreateProductDto): Promise<ProductEntity> {
         return this.productService.createProduct(createProductDto);
     }
@@ -105,6 +117,8 @@ export class ProductController {
      * @returns {Promise<ProductEntity>} The updated product.
      */
     @Put('product/:id')
+    @Roles(EUserRole.ADMIN, EUserRole.SUPER_ADMIN)
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
     async updateProduct(
         @Param('id') id: string,
         @Body() updateProductDto: UpdateProductDto
@@ -128,6 +142,8 @@ export class ProductController {
      * @returns {Promise<void>} A promise indicating the deletion result.
      */
     @Delete('product/:id')
+    @Roles(EUserRole.ADMIN, EUserRole.SUPER_ADMIN)
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
     async deleteProduct(@Param('id') id: string): Promise<void> {
         return this.productService.deleteProduct(id);
     }
