@@ -3,7 +3,7 @@ import {IsBoolean, IsEnum, IsOptional} from 'class-validator';
 import { EUserRole } from '../../../models/user/user.entity';
 
 
-export class UpdateUserRoleDto {
+export class UpdateUserFieldsDto {
     @IsOptional()
     @IsEnum(EUserRole, { message: 'Role must be one of USER, ADMIN, or SUPER_ADMIN.' })
     role: EUserRole;

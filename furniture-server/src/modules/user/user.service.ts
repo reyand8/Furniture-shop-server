@@ -22,7 +22,7 @@ import {
 import { UserRepository } from './repository/user.repository';
 import { ContactInfoRepository } from './repository/contactInfo.repository';
 import { GetAllUsersDto } from './dto/getAllUsers.dto';
-import { UpdateUserRoleDto } from './dto/updateUserRole.dto';
+import { UpdateUserFieldsDto } from './dto/updateUserFields.dto';
 
 
 const { ERROR_SERVER, NOT_FOUND_CONTACT_INFO, NOT_FOUND_USER_PROFILE } = ERROR_MESSAGES;
@@ -59,24 +59,25 @@ export class UserService {
      * This method assumes role-based access control is handled externally (e.g., by a controller or guard).
      *
      * @param userId - The ID of the user to update.
-     * @param updateUserRole - DTO containing one or more fields to update (e.g., role, isActive).
+     * @param updateUserFieldsDto - DTO containing one or more fields to update (e.g., role, isActive).
      * @returns A promise that resolves to the updated user entity without the password field.
      * @throws NotFoundException if the user is not found.
      * @throws InternalServerErrorException if the update operation fails.
      */
     async updateUserFields(
         userId: string,
-        updateUserRole: UpdateUserRoleDto
+        updateUserFieldsDto: UpdateUserFieldsDto
     ): Promise<Partial<UserEntity>> {
         try {
             const user: UserEntity | null = await this.userRepository.findById(userId);
             if (!user) {
                 throw new NotFoundException(NOT_FOUND_USER_PROFILE);
             }
-            Object.assign(user, {
-                ...(updateUserRole.role !== undefined && { role: updateUserRole.role }),
-                ...(updateUserRole.isActive !== undefined && { isActive: updateUserRole.isActive }),
-            });
+            for (const key in updateUserFieldsDto) {
+                if (updateUserFieldsDto[key] !== undefined) {
+                    user[key] = updateUserFieldsDto[key];
+                }
+            }
             const updatedUser: UserEntity = await this.userRepository.createAndSave(user);
             const { password, ...userWithoutPassword } = updatedUser;
             return userWithoutPassword;

@@ -13,7 +13,7 @@ import { ContactInfoEntity } from '../../models/contact-info/contact-info.entity
 import { Roles } from '../auth/roles-guard/roles.decorator';
 import { RolesGuard } from '../auth/roles-guard/roles.guard';
 import { GetAllUsersDto } from './dto/getAllUsers.dto';
-import { UpdateUserRoleDto } from './dto/updateUserRole.dto';
+import { UpdateUserFieldsDto } from './dto/updateUserFields.dto';
 
 
 @Controller('users')
@@ -27,7 +27,7 @@ export class UserController {
      * @param getAllUsersDto - DTO with filtering or pagination options for user list.
      * @returns A promise resolving to a list of users with partial information.
      */
-    @Get('')
+    @Get()
     @Roles(EUserRole.SUPER_ADMIN, EUserRole.ADMIN)
     @UseGuards(AuthGuard('jwt'), RolesGuard)
     async getAllUsers(
@@ -49,7 +49,7 @@ export class UserController {
     @UseGuards(AuthGuard('jwt'), RolesGuard)
     async updateUserFields(
         @Param('id') userId: string,
-        @Body() updateUserRoleDto: UpdateUserRoleDto
+        @Body() updateUserRoleDto: UpdateUserFieldsDto
     ): Promise<Partial<UserEntity>> {
         return this.userService.updateUserFields(userId, updateUserRoleDto);
     }
