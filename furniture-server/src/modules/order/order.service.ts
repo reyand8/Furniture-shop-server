@@ -1,6 +1,6 @@
 import {
-    BadRequestException, Injectable,
-    InternalServerErrorException,
+    BadRequestException,
+    Injectable,
     NotFoundException
 } from '@nestjs/common';
 
@@ -25,8 +25,9 @@ import { ProductRepository } from '../product/repository/product.repository';
 
 
 const {
-    ERROR_PERMISSION_ORDER_UPDATE, ERROR_SERVER,
-    NOT_FOUND_PRODUCT_IN_ORDER, UNAVAILABLE_PRODUCTS,
+    ERROR_PERMISSION_ORDER_UPDATE,
+    NOT_FOUND_PRODUCT_IN_ORDER,
+    UNAVAILABLE_PRODUCTS,
     NOT_FOUND_ORDER
 } = ERROR_MESSAGES;
 
@@ -51,34 +52,30 @@ export class OrderService {
      * @param createOrderDto - The data transfer object containing order information.
      * @param user - The authenticated user placing the order.
      * @returns A promise that resolves to the created OrderEntity.
-     * @throws InternalServerErrorException if an error occurs during the process.
      */
     async create(createOrderDto: CreateOrderDto, user: UserEntity): Promise<OrderEntity> {
         validateDtoNotEmpty(createOrderDto);
-        try {
-            const {contactInfoId, orderItems, paymentMethod, status, notes} = createOrderDto;
 
-            const contactInfo: ContactInfoEntity =
-                await this.userService.getContactInfoByIdAndUser(contactInfoId, user.id);
+        const {contactInfoId, orderItems, paymentMethod, status, notes} = createOrderDto;
 
-            const selectedProducts: ProductEntity[] = await this.checkProductsExist(orderItems);
+        const contactInfo: ContactInfoEntity =
+            await this.userService.getContactInfoByIdAndUser(contactInfoId, user.id);
 
-            this.checkUnavailableProducts(selectedProducts);
+        const selectedProducts: ProductEntity[] = await this.checkProductsExist(orderItems);
 
-            const {details: orderDetails, total: totalAmount} =
-                this.orderDetailsFactory.createDetails(orderItems, selectedProducts);
+        this.checkUnavailableProducts(selectedProducts);
 
-            return this.orderRepository.createAndSaveOrder({
-                user, contactInfo,
-                orderItems: orderDetails,
-                paymentMethod,
-                status: status || OrderStatus.PENDING,
-                totalAmount,
-                notes,
-            });
-        } catch (error) {
-            throw new InternalServerErrorException(ERROR_SERVER, error.message);
-        }
+        const {details: orderDetails, total: totalAmount} =
+            this.orderDetailsFactory.createDetails(orderItems, selectedProducts);
+
+        return this.orderRepository.createAndSaveOrder({
+            user, contactInfo,
+            orderItems: orderDetails,
+            paymentMethod,
+            status: status || OrderStatus.PENDING,
+            totalAmount,
+            notes,
+        });
     }
 
     /**
@@ -87,14 +84,9 @@ export class OrderService {
      *
      * @param user - The authenticated user whose orders are being retrieved.
      * @returns A promise that resolves to an array of OrderEntity objects.
-     * @throws InternalServerErrorException if an error occurs while fetching the data.
      */
     async findAll(user: UserEntity): Promise<OrderEntity[]> {
-        try {
-            return this.orderRepository.getAllOrders(user.id);
-        } catch (error) {
-            throw new InternalServerErrorException(ERROR_SERVER, error.message);
-        }
+        return this.orderRepository.getAllOrders(user.id);
     }
 
     /**
@@ -105,23 +97,18 @@ export class OrderService {
      * @param orderId - The ID of the order to retrieve.
      * @returns A promise that resolves to the found OrderEntity.
      * @throws NotFoundException if the order is not found.
-     * @throws InternalServerErrorException if a server error occurs.
      */
     async findOneOrderByUserId(userId: string, orderId: string): Promise<OrderEntity> {
         validateProvidedId(orderId);
-        try {
-            const order: OrderEntity | null =
-                await this.orderRepository.getOneOrderByUser(userId, orderId);
-            if (!order) {
-                throw new NotFoundException(NOT_FOUND_ORDER);
-            }
-            if (order.user) {
-                delete (order.user as Partial<UserEntity>).password;
-            }
-            return order;
-        } catch (error) {
-            throw new InternalServerErrorException(ERROR_SERVER, error.message);
+        const order: OrderEntity | null =
+            await this.orderRepository.getOneOrderByUser(userId, orderId);
+        if (!order) {
+            throw new NotFoundException(NOT_FOUND_ORDER);
         }
+        if (order.user) {
+            delete (order.user as Partial<UserEntity>).password;
+        }
+        return order;
     }
 
     /**
@@ -132,29 +119,26 @@ export class OrderService {
      * @param orderId - The ID of the order to be updated.
      * @returns A promise that resolves to the updated OrderEntity.
      * @throws NotFoundException if the order is not found.
-     * @throws InternalServerErrorException if a server error occurs.
      */
     async updateOrderStatus(
         orderId: string,
         updateOrderStatusDto: UpdateOrderStatusDto,
     ): Promise<OrderEntity> {
         validateProvidedId(orderId);
-        try {
-            const order: OrderEntity | null = await this.orderRepository.getOneOrderByOrderId(orderId);
-            if (!order) {
-                throw new NotFoundException(NOT_FOUND_ORDER);
-            }
-            const validatedDto: OrderEntity =
-                validateDtoFields(order, updateOrderStatusDto);
-
-            const updatedOrderStatus: OrderEntity = await this.orderRepository.createAndSaveOrder(validatedDto);
-            if (updatedOrderStatus.user) {
-                delete (updatedOrderStatus.user as Partial<UserEntity>).password;
-            }
-            return updatedOrderStatus;
-        } catch (error) {
-            throw new InternalServerErrorException(ERROR_SERVER, error.message);
+        const order: OrderEntity | null =
+            await this.orderRepository.getOneOrderByOrderId(orderId);
+        if (!order) {
+            throw new NotFoundException(NOT_FOUND_ORDER);
         }
+        const validatedDto: OrderEntity =
+            validateDtoFields(order, updateOrderStatusDto);
+
+        const updatedOrderStatus: OrderEntity =
+            await this.orderRepository.createAndSaveOrder(validatedDto);
+        if (updatedOrderStatus.user) {
+            delete (updatedOrderStatus.user as Partial<UserEntity>).password;
+        }
+        return updatedOrderStatus;
     }
 
     /**
@@ -167,27 +151,22 @@ export class OrderService {
      * @param orderId - The ID of the order to be updated.
      * @returns A promise that resolves to the updated OrderEntity.
      * @throws NotFoundException if the order is not found.
-     * @throws InternalServerErrorException if a server error occurs.
      */
     async updateOrder( user: UserEntity, updateOrderDto: UpdateOrderDto, orderId: string
     ): Promise<OrderEntity> {
         validateDtoNotEmpty(updateOrderDto);
         validateProvidedId(orderId);
-        try {
-            const { contactInfoId } = updateOrderDto
-            const order: OrderEntity = await this.findOneOrderByUserId(user.id, orderId);
-            this.checkCreatedTime(order.createdAt);
+        const { contactInfoId } = updateOrderDto
+        const order: OrderEntity = await this.findOneOrderByUserId(user.id, orderId);
+        this.checkCreatedTime(order.createdAt);
 
-            if (contactInfoId) {
-                const newContactInfo: ContactInfoEntity[] =
-                    await this.userService.getContactInfo(contactInfoId)
-                order.contactInfo = newContactInfo[0];
-            }
-            const validatedDto: OrderEntity = validateDtoFields(order, updateOrderDto);
-            return this.orderRepository.createAndSaveOrder(validatedDto);
-        } catch (error) {
-            throw new InternalServerErrorException(ERROR_SERVER, error.message);
+        if (contactInfoId) {
+            const newContactInfo: ContactInfoEntity[] =
+                await this.userService.getContactInfo(contactInfoId)
+            order.contactInfo = newContactInfo[0];
         }
+        const validatedDto: OrderEntity = validateDtoFields(order, updateOrderDto);
+        return this.orderRepository.createAndSaveOrder(validatedDto);
     }
 
     /**

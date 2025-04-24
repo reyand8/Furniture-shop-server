@@ -1,6 +1,7 @@
 import {
     Controller, Get, Post, Param,
-    Body, UseGuards, Request, Put
+    Body, UseGuards, Request, Put,
+    UseInterceptors
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
@@ -12,8 +13,10 @@ import { UpdateOrderStatusDto } from './dto/updateOrderStatus.dto';
 import { Roles } from '../auth/roles-guard/roles.decorator';
 import { EUserRole } from '../../models/user/user.entity';
 import { RolesGuard } from '../auth/roles-guard/roles.guard';
+import { ErrorInterceptor } from '../common/errorInterceptor';
 
 
+@UseInterceptors(ErrorInterceptor)
 @Controller('orders')
 export class OrderController {
     constructor(private readonly orderService: OrderService) {}

@@ -1,5 +1,6 @@
 import {
-    Body, Controller, Post, UseGuards
+    Body, Controller, Post,
+    UseGuards, UseInterceptors
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
@@ -11,11 +12,10 @@ import { RegisterByAdminDto } from './dto/registerByAdmin.dto';
 import { Roles } from './roles-guard/roles.decorator';
 import { EUserRole } from '../../models/user/user.entity';
 import { RolesGuard } from './roles-guard/roles.guard';
+import { ErrorInterceptor } from '../common/errorInterceptor';
 
 
-/**
- * `AuthController` handles HTTP routes related to authentication such as user registration and login.
- */
+@UseInterceptors(ErrorInterceptor)
 @Controller('auth')
 export class AuthController {
     constructor(private readonly authService: AuthService) {}
