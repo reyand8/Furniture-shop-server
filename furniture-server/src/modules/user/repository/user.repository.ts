@@ -29,7 +29,7 @@ export class UserRepository {
      * @param userId - The ID of the user.
      * @returns A promise resolving to the UserEntity or null if not found.
      */
-    findById(userId: string): Promise<UserEntity | null> {
+    async findById(userId: string): Promise<UserEntity | null> {
         return this.userRepo.findOne({
             where: { id: userId },
         });
@@ -42,7 +42,7 @@ export class UserRepository {
      * @param data - Partial user data to create the entity.
      * @returns A promise that resolves to the saved UserEntity.
      */
-    createAndSave(data: Partial<UserEntity>): Promise<UserEntity> {
+    async createAndSave(data: Partial<UserEntity>): Promise<UserEntity> {
         const profileData: UserEntity = this.userRepo.create(data);
         return this.userRepo.save(profileData);
     }

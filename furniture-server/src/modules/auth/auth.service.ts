@@ -31,7 +31,7 @@ export class AuthService {
      * @param password - The plain text password to be hashed.
      * @returns A promise that resolves to the hashed password.
      */
-    private hashPassword(password: string): Promise<string> {
+    private async hashPassword(password: string): Promise<string> {
         return bcrypt.hash(password, 10);
     }
 
@@ -156,7 +156,7 @@ export class AuthService {
      * @param hashedPassword - The hashed password.
      * @returns True if the passwords match, otherwise false.
      */
-    comparePasswords(pass: string, hashedPassword: string): Promise<boolean> {
+    async comparePasswords(pass: string, hashedPassword: string): Promise<boolean> {
         return bcrypt.compare(pass, hashedPassword);
     }
 }

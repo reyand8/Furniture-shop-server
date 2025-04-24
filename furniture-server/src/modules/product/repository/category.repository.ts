@@ -16,7 +16,7 @@ export class CategoryRepository {
      * Retrieves all categories from the database.
      * @returns A promise that resolves to an array of CategoryEntity objects.
      */
-    findAll(): Promise<CategoryEntity[]> {
+    async findAll(): Promise<CategoryEntity[]> {
         return this.categoryRepo.find();
     }
 
@@ -25,7 +25,7 @@ export class CategoryRepository {
      * @param categoryId - The ID of the category.
      * @returns A promise that resolves to a CategoryEntity or null if not found.
      */
-    findById(categoryId: string): Promise<CategoryEntity | null> {
+    async findById(categoryId: string): Promise<CategoryEntity | null> {
         return this.categoryRepo.findOne({ where: { id: categoryId } });
     }
 
@@ -34,7 +34,7 @@ export class CategoryRepository {
      * @param categoryName - The name of the category.
      * @returns A promise that resolves to a CategoryEntity or null if not found.
      */
-    findByName(categoryName: string): Promise<CategoryEntity | null> {
+    async findByName(categoryName: string): Promise<CategoryEntity | null> {
         return this.categoryRepo.findOne({ where: { name: categoryName } });
     }
 
@@ -43,7 +43,7 @@ export class CategoryRepository {
      * @param categoryName - The name of the new category.
      * @returns A promise that resolves to the created CategoryEntity.
      */
-    createCategory(categoryName: string): Promise<CategoryEntity> {
+    async createCategory(categoryName: string): Promise<CategoryEntity> {
         const category: CategoryEntity = this.categoryRepo.create({ name: categoryName });
         return this.categoryRepo.save(category);
     }
@@ -53,7 +53,7 @@ export class CategoryRepository {
      * @param categoryId - The ID of the category to delete.
      * @returns A promise that resolves to the result of the deletion.
      */
-    removeCategory(categoryId: string): Promise<DeleteResult> {
+    async removeCategory(categoryId: string): Promise<DeleteResult> {
         return this.categoryRepo.delete(categoryId);
     }
 
@@ -62,7 +62,7 @@ export class CategoryRepository {
      * @param category - The category entity to save.
      * @returns A promise that resolves to the updated CategoryEntity.
      */
-    save(category: CategoryEntity): Promise<CategoryEntity> {
+    async save(category: CategoryEntity): Promise<CategoryEntity> {
         return this.categoryRepo.save(category);
     }
 }

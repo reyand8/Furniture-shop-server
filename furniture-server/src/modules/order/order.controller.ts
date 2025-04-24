@@ -28,7 +28,7 @@ export class OrderController {
      */
     @Post()
     @UseGuards(AuthGuard('jwt'))
-    create(
+    async create(
         @Body() createOrderDto: CreateOrderDto,
         @Request() req: any
     ): Promise<OrderEntity> {
@@ -44,7 +44,7 @@ export class OrderController {
      */
     @Get()
     @UseGuards(AuthGuard('jwt'))
-    findAll(@Request() req: any): Promise<OrderEntity[]> {
+    async findAll(@Request() req: any): Promise<OrderEntity[]> {
         return this.orderService.findAll(req.user);
     }
 
@@ -58,7 +58,7 @@ export class OrderController {
      */
     @Get(':id')
     @UseGuards(AuthGuard('jwt'))
-    findOne(
+    async findOne(
         @Param('id') id: string,
         @Request() req: any
     ): Promise<OrderEntity> {
@@ -77,7 +77,7 @@ export class OrderController {
     @Post('update-status/:userId/:orderId')
     @Roles(EUserRole.SUPER_ADMIN, EUserRole.ADMIN)
     @UseGuards(AuthGuard('jwt'), RolesGuard)
-    updateOrderStatus(
+    async updateOrderStatus(
         @Param('userId') userId: string,
         @Param('orderId') orderId: string,
         @Body() updateOrderStatusDto: UpdateOrderStatusDto,
@@ -96,7 +96,7 @@ export class OrderController {
      */
     @Put('update/:id')
     @UseGuards(AuthGuard('jwt'))
-    updateOrder(
+    async updateOrder(
         @Param('id') id: string,
         @Body() updateOrderDto: UpdateOrderDto,
         @Request() req: any

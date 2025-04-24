@@ -19,7 +19,7 @@ export class OrderRepository {
      * @param userId - The ID of the user whose orders are being retrieved
      * @returns An array of OrderEntity objects with related data
      */
-    getAllOrders(userId: string): Promise<OrderEntity[]> {
+    async getAllOrders(userId: string): Promise<OrderEntity[]> {
        return this.orderRepo.find({
             where: {
                 user: { id: userId },
@@ -53,7 +53,7 @@ export class OrderRepository {
      * @param order - The order entity to save
      * @returns The saved OrderEntity
      */
-    createAndSaveOrder(order: Partial<OrderEntity>): Promise<OrderEntity> {
+    async createAndSaveOrder(order: Partial<OrderEntity>): Promise<OrderEntity> {
         const createOrder: OrderEntity = this.orderRepo.create(order);
         return this.orderRepo.save(createOrder);
     }

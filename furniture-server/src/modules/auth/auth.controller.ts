@@ -29,7 +29,7 @@ export class AuthController {
     @Post('register-by-admin')
     @Roles(EUserRole.SUPER_ADMIN)
     @UseGuards(AuthGuard('jwt'), RolesGuard)
-    registerByAdmin(@Body() registerByAdminDto: RegisterByAdminDto): Promise<ITokens> {
+    async registerByAdmin(@Body() registerByAdminDto: RegisterByAdminDto): Promise<ITokens> {
         return this.authService.register(registerByAdminDto);
     }
 
@@ -40,7 +40,7 @@ export class AuthController {
      * @throws HttpException if validation fails or an error occurs during registration.
      */
     @Post('register')
-    register(@Body() registerUserDto: RegisterUserDto): Promise<ITokens> {
+    async register(@Body() registerUserDto: RegisterUserDto): Promise<ITokens> {
         return this.authService.register(registerUserDto);
     }
 
@@ -52,7 +52,7 @@ export class AuthController {
      * @throws UnauthorizedException if credentials are incorrect.
      */
     @Post('login')
-    login(@Body() loginUserDto: LoginUserDto): Promise<ITokens> {
+    async login(@Body() loginUserDto: LoginUserDto): Promise<ITokens> {
         return this.authService.login(loginUserDto);
     }
 }

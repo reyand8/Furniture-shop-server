@@ -30,7 +30,7 @@ export class UserController {
     @Get('')
     @Roles(EUserRole.SUPER_ADMIN, EUserRole.ADMIN)
     @UseGuards(AuthGuard('jwt'), RolesGuard)
-    getAllUsers(
+    async getAllUsers(
         @Query() getAllUsersDto: GetAllUsersDto
     ): Promise<Partial<UserEntity>[]> {
         return this.userService.getAllUsers(getAllUsersDto);
@@ -47,7 +47,7 @@ export class UserController {
     @Put(':id')
     @Roles(EUserRole.SUPER_ADMIN)
     @UseGuards(AuthGuard('jwt'), RolesGuard)
-    updateUserFields(
+    async updateUserFields(
         @Param('id') userId: string,
         @Body() updateUserRoleDto: UpdateUserRoleDto
     ): Promise<Partial<UserEntity>> {
@@ -61,7 +61,7 @@ export class UserController {
      */
     @Get('me')
     @UseGuards(AuthGuard('jwt'))
-    getProfile(@Request() req: any): Promise<Partial<UserEntity>> {
+    async getProfile(@Request() req: any): Promise<Partial<UserEntity>> {
         return req.user;
     }
 
@@ -73,7 +73,7 @@ export class UserController {
      */
     @Put('me')
     @UseGuards(AuthGuard('jwt'))
-    updateProfile(
+    async updateProfile(
         @Body() updateUserDto: UpdateUserDto,
         @Request() req: any
     ): Promise<Partial<UserEntity>> {
@@ -87,7 +87,7 @@ export class UserController {
      */
     @Get('contact-info')
     @UseGuards(AuthGuard('jwt'))
-    getContactInfo(@Request() req: any): Promise<ContactInfoEntity[]> {
+    async getContactInfo(@Request() req: any): Promise<ContactInfoEntity[]> {
         return this.userService.getContactInfo(req.user.id);
     }
 
@@ -99,7 +99,7 @@ export class UserController {
      */
     @Post('contact-info')
     @UseGuards(AuthGuard('jwt'))
-    createContactInfo(
+    async createContactInfo(
         @Body() createContactInfoDto: CreateContactInfoDto,
         @Request() req: any): Promise<ContactInfoEntity> {
         return this.userService.createContactInfo(createContactInfoDto, req.user.id);
@@ -113,7 +113,7 @@ export class UserController {
      */
     @Get('contact-info/:id')
     @UseGuards(AuthGuard('jwt'))
-    getContactInfoById(
+    async getContactInfoById(
         @Param('id') contactInfoId: string,
         @Request() req: any): Promise<ContactInfoEntity> {
         return this.userService.getContactInfoByIdAndUser(contactInfoId, req.user.id);
@@ -128,7 +128,7 @@ export class UserController {
      */
     @Put('contact-info/:id')
     @UseGuards(AuthGuard('jwt'))
-    updateContactInfoById(
+    async updateContactInfoById(
         @Param('id') contactInfoId: string,
         @Body() updateContactInfoDto: UpdateContactInfoDto,
         @Request() req: any
@@ -144,7 +144,7 @@ export class UserController {
      */
     @Delete('contact-info/:id')
     @UseGuards(AuthGuard('jwt'))
-    delete(
+    async delete(
         @Param('id') contactInfoId: string,
         @Request() req: any): Promise<void> {
         return this.userService.deleteContactInfo(contactInfoId, req.user.id);

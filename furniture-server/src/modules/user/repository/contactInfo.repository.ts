@@ -20,7 +20,7 @@ export class ContactInfoRepository {
      * @param user - The user object to associate with the contact info.
      * @returns A promise that resolves to the saved ContactInfoEntity.
      */
-    createAndSave(
+    async createAndSave(
         data: Partial<ContactInfoEntity>,
         user: { id: string; }
     ): Promise<ContactInfoEntity> {
@@ -34,7 +34,7 @@ export class ContactInfoRepository {
      * @param data - Partial contact info data to update or create the entity.
      * @returns A promise that resolves to the saved ContactInfoEntity.
      */
-    createAndUpdate(
+    async createAndUpdate(
         data: Partial<ContactInfoEntity>
     ): Promise<ContactInfoEntity> {
         const contactInfoData: ContactInfoEntity = this.contactInfoRepo.create(data);
@@ -47,7 +47,7 @@ export class ContactInfoRepository {
      * @param userId - The ID of the user whose contact info should be retrieved.
      * @returns A promise that resolves to an array of ContactInfoEntity.
      */
-    findAll(userId: string): Promise<ContactInfoEntity[]> {
+    async findAll(userId: string): Promise<ContactInfoEntity[]> {
         return this.contactInfoRepo.find({ where: { user: { id: userId } } });
     }
 
@@ -58,7 +58,7 @@ export class ContactInfoRepository {
      * @param userId - The ID of the user associated with the contact info.
      * @returns A promise that resolves to the matching ContactInfoEntity or null if not found.
      */
-    findOneByIds(
+    async findOneByIds(
         contactInfoId: string,
         userId: string
     ): Promise<ContactInfoEntity | null> {
@@ -76,7 +76,7 @@ export class ContactInfoRepository {
      * @param contactInfo - The contact info entity to be removed.
      * @returns A promise that resolves to the removed ContactInfoEntity.
      */
-    remove(contactInfo: ContactInfoEntity): Promise<ContactInfoEntity> {
+    async remove(contactInfo: ContactInfoEntity): Promise<ContactInfoEntity> {
         return this.contactInfoRepo.remove(contactInfo);
     }
 }

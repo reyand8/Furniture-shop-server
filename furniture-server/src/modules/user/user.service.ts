@@ -43,7 +43,7 @@ export class UserService {
      * @throws ForbiddenException if access is not allowed.
      * @throws InternalServerErrorException if repository fails.
      */
-    getAllUsers(
+    async getAllUsers(
         getAllUsersDto: GetAllUsersDto
     ): Promise<Partial<UserEntity>[]> {
         validateDtoNotEmpty(getAllUsersDto);
@@ -96,7 +96,7 @@ export class UserService {
      * @param updateUserDto - DTO containing the fields to be updated
      * @returns The updated user entity
      */
-    updateProfile(
+    async updateProfile(
         user: UserEntity,
         updateUserDto: UpdateUserDto
     ): Promise<UserEntity> {
@@ -120,7 +120,7 @@ export class UserService {
      * @param userId - The ID of the user whose contact information is requested
      * @returns A list of contact information associated with the user
      */
-     getContactInfo(userId: string): Promise<ContactInfoEntity[]> {
+    async getContactInfo(userId: string): Promise<ContactInfoEntity[]> {
         validateProvidedId(userId);
         try {
             return this.contactInfoRepository.findAll(userId);
@@ -140,7 +140,7 @@ export class UserService {
      * @param userId - The ID of the user who the contact information belongs to
      * @returns The newly created contact information entity
      */
-     createContactInfo(
+    async createContactInfo(
         createContactInfoDto: CreateContactInfoDto,
         userId: string): Promise<ContactInfoEntity> {
         validateProvidedId(userId);
