@@ -69,20 +69,18 @@ export class OrderController {
      * Updates the status of an existing order by its ID for the authenticated user.
      * Requires JWT authentication.
      *
-     * @param userId - The ID of the user
      * @param orderId - The ID of the order to update
      * @param updateOrderStatusDto - The DTO containing the updated order status
      * @returns The updated OrderEntity
      */
-    @Post('update-status/:userId/:orderId')
+    @Post('update-status/:orderId')
     @Roles(EUserRole.SUPER_ADMIN, EUserRole.ADMIN)
     @UseGuards(AuthGuard('jwt'), RolesGuard)
     async updateOrderStatus(
-        @Param('userId') userId: string,
         @Param('orderId') orderId: string,
         @Body() updateOrderStatusDto: UpdateOrderStatusDto,
     ): Promise<OrderEntity> {
-        return this.orderService.updateOrderStatus(userId, orderId, updateOrderStatusDto);
+        return this.orderService.updateOrderStatus(orderId, updateOrderStatusDto);
     }
 
     /**
