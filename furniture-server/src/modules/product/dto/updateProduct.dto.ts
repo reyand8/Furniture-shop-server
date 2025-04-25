@@ -1,5 +1,5 @@
 import {
-    IsArray, IsNumber, IsOptional,
+    IsArray, IsBoolean, IsNumber, IsOptional,
     IsString, MaxLength, Min
 } from 'class-validator';
 
@@ -38,4 +38,12 @@ export class UpdateProductDto {
     @IsArray({ message: 'Sizes list must be an array.' })
     @IsString({ each: true, message: 'Each size must be a string.' })
     sizes: string[];
+
+    @IsOptional()
+    @IsBoolean({ message: 'isAvailable status must be true or false.' })
+    isAvailable: boolean = true;
+
+    @IsOptional()
+    @IsBoolean({ message: 'isActive status must be true or false.' })
+    isActive: boolean;
 }

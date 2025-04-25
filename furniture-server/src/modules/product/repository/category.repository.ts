@@ -49,15 +49,6 @@ export class CategoryRepository {
     }
 
     /**
-     * Deletes a category by its ID.
-     * @param categoryId - The ID of the category to delete.
-     * @returns A promise that resolves to the result of the deletion.
-     */
-    async removeCategory(categoryId: string): Promise<DeleteResult> {
-        return this.categoryRepo.delete(categoryId);
-    }
-
-    /**
      * Saves changes made to a category entity.
      * @param category - The category entity to save.
      * @returns A promise that resolves to the updated CategoryEntity.

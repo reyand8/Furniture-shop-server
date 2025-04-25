@@ -70,15 +70,6 @@ export class ProductRepository {
     }
 
     /**
-     * Deletes a product by its ID.
-     * @param productId - The ID of the product to delete.
-     * @returns A promise resolving to the result of the deletion.
-     */
-    async removeProduct(productId: string): Promise<DeleteResult> {
-        return this.productRepo.delete(productId);
-    }
-
-    /**
      * Finds products by their type.
      * @param type - The type of the products.
      * @returns A promise resolving to an array of ProductEntity.
