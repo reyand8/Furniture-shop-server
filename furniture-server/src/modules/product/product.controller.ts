@@ -1,6 +1,7 @@
 import {
     Body, Controller, Delete, Get,
-    Param, Post, Put, Query, UseGuards
+    Param, Post, Put, Query, UseGuards,
+    UseInterceptors
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
@@ -15,8 +16,10 @@ import { GetProductsQueryDto } from './dto/getProductsQuery.dto';
 import { Roles } from '../auth/roles-guard/roles.decorator';
 import { EUserRole } from '../../models/user/user.entity';
 import { RolesGuard } from '../auth/roles-guard/roles.guard';
+import { ErrorInterceptor } from '../common/errorInterceptor';
 
 
+@UseInterceptors(ErrorInterceptor)
 @Controller('catalog')
 export class ProductController {
     constructor(private readonly productService: ProductService ) {}

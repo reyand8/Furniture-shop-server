@@ -1,8 +1,7 @@
 import { Between, LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
 import {
     BadRequestException,
-    Injectable,
-    InternalServerErrorException
+    Injectable, NotFoundException
 } from '@nestjs/common';
 
 import { CategoryEntity } from '../../models/category/category.entity';
@@ -24,7 +23,7 @@ import { CategoryRepository } from './repository/category.repository';
 import { ProductRepository } from './repository/product.repository';
 
 
-const { ERROR_SERVER, REQUIRED_CATEGORY_NAME, NOT_FOUND_CATEGORY,
+const { REQUIRED_CATEGORY_NAME, NOT_FOUND_CATEGORY,
     REQUIRED_PRODUCT_NAME, NOT_FOUND_PRODUCT, EXISTS_CATEGORY_NAME
 } = ERROR_MESSAGES;
 
@@ -39,14 +38,9 @@ export class ProductService {
      * Retrieves all categories from the database.
      *
      * @returns {Promise<CategoryEntity[]>} A list of all categories.
-     * @throws {InternalServerErrorException} If there's an error during the database query.
      */
     async getCategories(): Promise<CategoryEntity[]> {
-        try {
-            return this.categoryRepository.findAll();
-        } catch (error) {
-            throw new InternalServerErrorException(ERROR_SERVER, error.message);
-        }
+        return this.categoryRepository.findAll();
     }
 
     /**
@@ -55,21 +49,15 @@ export class ProductService {
      * @param {string} categoryId - The ID of the category to retrieve.
      * @returns {Promise<CategoryEntity>} The category with the specified ID.
      * @throws {BadRequestException} If the provided ID is invalid.
-     * @throws {InternalServerErrorException} If the category is not found or
-     * if there's an error during the database query.
      */
     async getCategory(categoryId: string): Promise<CategoryEntity> {
         validateProvidedId(categoryId);
-        try {
-            const category: CategoryEntity | null =
-                await this.categoryRepository.findById(categoryId);
-            if (!category) {
-                throw new InternalServerErrorException(NOT_FOUND_CATEGORY);
-            }
-            return category;
-        } catch (error) {
-            throw new InternalServerErrorException(ERROR_SERVER, error.message);
+        const category: CategoryEntity | null =
+            await this.categoryRepository.findById(categoryId);
+        if (!category) {
+            throw new NotFoundException(NOT_FOUND_CATEGORY);
         }
+        return category;
     }
 
     /**
@@ -77,37 +65,27 @@ export class ProductService {
      *
      * @param {string} categoryName - The name of the category to be created.
      * @throws {BadRequestException} If the category name is missing.
-     * @throws {InternalServerErrorException} If there's an error during the database operation.
      */
     async createCategory(categoryName: string): Promise<CategoryEntity> {
         if (!categoryName) {
             throw new BadRequestException(REQUIRED_CATEGORY_NAME);
         }
-        try {
-            const isCatExist: CategoryEntity | null
-                = await this.categoryRepository.findByName(categoryName);
-            if (isCatExist) {
-                throw new BadRequestException(EXISTS_CATEGORY_NAME);
-            }
-            return this.categoryRepository.createCategory(categoryName);
-        } catch (error) {
-            throw new InternalServerErrorException(ERROR_SERVER, error.message);
+        const isCatExist: CategoryEntity | null
+            = await this.categoryRepository.findByName(categoryName);
+        if (isCatExist) {
+            throw new BadRequestException(EXISTS_CATEGORY_NAME);
         }
+        return this.categoryRepository.createCategory(categoryName);
     }
 
     /**
      * Deletes a category by its ID.
      *
      * @param {string} categoryId - The ID of the category to be deleted.
-     * @throws {InternalServerErrorException} If there's an error during the deletion process.
      */
     async deleteCategory(categoryId: string): Promise<void> {
         validateProvidedId(categoryId);
-        try {
-            await this.categoryRepository.removeCategory(categoryId);
-        } catch (error) {
-            throw new InternalServerErrorException(ERROR_SERVER, error.message);
-        }
+        await this.categoryRepository.removeCategory(categoryId);
     }
 
     /**
@@ -116,7 +94,6 @@ export class ProductService {
      * @param {string} categoryId - The ID of the category to be updated.
      * @param {UpdateCategoryDto} updateCategoryDto - The updated category data.
      *
-     * @throws {InternalServerErrorException} If the category is not found or if there's an error during the update process.
      * @throws {BadRequestException} If the category ID is invalid.
      */
     async updateCategory(
@@ -125,17 +102,13 @@ export class ProductService {
     ): Promise<CategoryEntity> {
         validateProvidedId(categoryId);
         validateDtoNotEmpty(updateCategoryDto);
-        try {
-            const category: CategoryEntity | null =
-                await this.categoryRepository.findById(categoryId);
-            if (!category) {
-                throw new InternalServerErrorException(NOT_FOUND_CATEGORY);
-            }
-            const validatedDto: CategoryEntity = validateDtoFields(category, updateCategoryDto);
-            return this.categoryRepository.save(validatedDto);
-        } catch (error) {
-            throw new InternalServerErrorException(ERROR_SERVER, error.message);
+        const category: CategoryEntity | null =
+            await this.categoryRepository.findById(categoryId);
+        if (!category) {
+            throw new NotFoundException(NOT_FOUND_CATEGORY);
         }
+        const validatedDto: CategoryEntity = validateDtoFields(category, updateCategoryDto);
+        return this.categoryRepository.save(validatedDto);
     }
 
     /**
@@ -144,7 +117,6 @@ export class ProductService {
      *
      * @param getProductsQueryDto - DTO containing pagination and filter options
      * @returns An object with the list of products and the total number of pages
-     * @throws {InternalServerErrorException} If an error occurs during the database query
      */
     async getProducts(
         getProductsQueryDto: GetProductsQueryDto
@@ -156,15 +128,11 @@ export class ProductService {
 
         const skipPage: number = (page - 1) * pageSize;
 
-        try {
-            const where: IWhereCondition =
-                this.buildGetProductWhereCondition(getProductsQueryDto);
-            const [products, totalCount] =
-                await this.productRepository.findPaginated(where, skipPage, pageSize);
-            return { products, totalPages: Math.ceil(totalCount / pageSize) };
-        } catch (error) {
-            throw new InternalServerErrorException(ERROR_SERVER, error.message);
-        }
+        const where: IWhereCondition =
+            this.buildGetProductWhereCondition(getProductsQueryDto);
+        const [products, totalCount] =
+            await this.productRepository.findPaginated(where, skipPage, pageSize);
+        return { products, totalPages: Math.ceil(totalCount / pageSize) };
     }
 
     /**
@@ -172,15 +140,10 @@ export class ProductService {
      *
      * @param createProductDto - Data transfer object containing product creation data.
      * @returns The newly created product entity.
-     * @throws {InternalServerErrorException} If there's an error during the database operation.
      */
     async createProduct(createProductDto: CreateProductDto): Promise<ProductEntity> {
         validateDtoNotEmpty(createProductDto);
-        try {
-            return this.productRepository.createProduct(createProductDto);
-        } catch (error) {
-            throw new InternalServerErrorException(ERROR_SERVER, error.message);
-        }
+        return this.productRepository.createProduct(createProductDto);
     }
 
     /**
@@ -189,8 +152,6 @@ export class ProductService {
      * @param productId - The ID of the product to update.
      * @param updateProductDto - Data transfer object containing updated product data.
      * @returns The updated product entity.
-     * @throws {InternalServerErrorException} If the category is not found or if
-     * there's an error during the update process.
      * @throws {BadRequestException} If the product ID is invalid.
      */
     async updateProduct(
@@ -198,17 +159,13 @@ export class ProductService {
         updateProductDto: UpdateProductDto
     ): Promise<ProductEntity> {
         validateDtoNotEmpty(updateProductDto);
-        try {
-            const product: ProductEntity | null =
-                await this.productRepository.findById(productId)
-            if (!product) {
-                throw new InternalServerErrorException(NOT_FOUND_PRODUCT);
-            }
-            const validatedDto: ProductEntity = validateDtoFields(product, updateProductDto);
-            return this.productRepository.update(validatedDto);
-        } catch (error) {
-            throw new InternalServerErrorException(ERROR_SERVER, error.message);
+        const product: ProductEntity | null =
+            await this.productRepository.findById(productId)
+        if (!product) {
+            throw new NotFoundException(NOT_FOUND_PRODUCT);
         }
+        const validatedDto: ProductEntity = validateDtoFields(product, updateProductDto);
+        return this.productRepository.update(validatedDto);
     }
 
     /**
@@ -216,35 +173,25 @@ export class ProductService {
      *
      * @param productId - The ID of the product to retrieve.
      * @returns The product entity if found, or throws an error if not found.
-     * @throws {InternalServerErrorException} If there's an error during the database operation.
      */
     async getProductById(productId: string): Promise<ProductEntity | null> {
         validateProvidedId(productId);
-        try {
-            const product: ProductEntity | null =
-                await this.productRepository.findById(productId)
-            if (!product) {
-                throw new BadRequestException(NOT_FOUND_PRODUCT);
-            }
-            return product
-        } catch (error) {
-            throw new InternalServerErrorException(ERROR_SERVER, error.message);
+        const product: ProductEntity | null =
+            await this.productRepository.findById(productId)
+        if (!product) {
+            throw new BadRequestException(NOT_FOUND_PRODUCT);
         }
+        return product
     }
 
     /**
      * Deletes a product by its ID.
      *
      * @param productId - The ID of the product to delete.
-     * @throws {InternalServerErrorException} If there's an error during the deletion process.
      */
     async deleteProduct(productId: string): Promise<void> {
         validateProvidedId(productId);
-        try {
-            await this.productRepository.removeProduct(productId)
-        } catch (error) {
-            throw new InternalServerErrorException(ERROR_SERVER, error.message);
-        }
+        await this.productRepository.removeProduct(productId)
     }
 
     /**
@@ -252,15 +199,10 @@ export class ProductService {
      *
      * @param productType - The product type to filter by.
      * @returns A list of products of the specified type.
-     * @throws {InternalServerErrorException} If there's an error during the database operation.
      */
     async getRelativeProducts(productType: ProductType): Promise<ProductEntity[]> {
         validateProductType(productType);
-        try {
-            return this.productRepository.findByType(productType)
-        } catch (error) {
-            throw new InternalServerErrorException(ERROR_SERVER, error.message);
-        }
+        return this.productRepository.findByType(productType)
     }
 
     /**
@@ -268,31 +210,21 @@ export class ProductService {
      *
      * @param productName - The product name or part of it to search.
      * @returns A list of matching products.
-     * @throws {InternalServerErrorException} If there's an error during the database operation.
      */
     async searchProductByName(productName: string): Promise<ProductEntity[]> {
         if (!productName) {
             throw new BadRequestException(REQUIRED_PRODUCT_NAME);
         }
-        try {
-            return this.productRepository.searchByName(productName);
-        } catch (error) {
-            throw new InternalServerErrorException(ERROR_SERVER, error.message);
-        }
+        return this.productRepository.searchByName(productName);
     }
 
     /**
      * Retrieves products marked as bestsellers, ordered by creation date.
      *
      * @returns A list of best-selling products.
-     * @throws {InternalServerErrorException} If there's an error during the database operation.
      */
     async getTopSellerProducts(): Promise<ProductEntity[]> {
-        try {
-            return await this.productRepository.findTopSellers();
-        } catch (error) {
-            throw new InternalServerErrorException(ERROR_SERVER, error.message);
-        }
+        return await this.productRepository.findTopSellers();
     }
 
     /**

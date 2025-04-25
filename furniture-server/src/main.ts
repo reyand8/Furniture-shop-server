@@ -4,6 +4,7 @@ import {
   ValidationError, ValidationPipe } from '@nestjs/common';
 
 import { AppModule } from './app.module';
+import { ErrorInterceptor } from './modules/common/errorInterceptor';
 
 
 async function bootstrap(): Promise<void> {
@@ -14,7 +15,7 @@ async function bootstrap(): Promise<void> {
   app.setGlobalPrefix('api');
   app.enableCors();
   app.enableShutdownHooks();
-
+  app.useGlobalInterceptors(new ErrorInterceptor());
   app.useGlobalPipes(new ValidationPipe({
     forbidNonWhitelisted: true,
     whitelist: true,

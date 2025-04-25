@@ -10,7 +10,7 @@ import * as bcrypt from 'bcryptjs';
 import { ITokens, IUser, IUserRegister } from './auth.interface';
 import { UserEntity } from '../../models/user/user.entity';
 import { LoginUserDto } from './dto/loginUser.dto';
-import {ERROR_MESSAGES} from '../common/constants';
+import { ERROR_MESSAGES } from '../common/constants';
 
 const {
     INACTIVE_USER_PROFILE,
