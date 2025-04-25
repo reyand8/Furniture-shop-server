@@ -35,7 +35,7 @@ export function validateDtoFields<T>(
 ): T {
     const updatedEntity = { ...entity };
     for (const key in updateDto) {
-        if (updateDto[key] && !forbiddenFields.includes(key)) {
+        if (updateDto[key] !== undefined && !forbiddenFields.includes(key)) {
             updatedEntity[key] = updateDto[key];
         }
     }

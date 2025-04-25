@@ -40,8 +40,12 @@ export class CreateProductDto {
     size: string;
 
     @IsOptional()
-    @IsBoolean()
+    @IsBoolean({ message: 'isAvailable status must be true or false.' })
     isAvailable: boolean = true;
+
+    @IsOptional()
+    @IsBoolean({ message: 'isActive status must be true or false.' })
+    isActive: boolean;
 
     @IsUUID('4', { message: 'Category ID must be a valid UUID.' })
     categoryId: string;

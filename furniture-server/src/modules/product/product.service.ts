@@ -79,16 +79,6 @@ export class ProductService {
     }
 
     /**
-     * Deletes a category by its ID.
-     *
-     * @param {string} categoryId - The ID of the category to be deleted.
-     */
-    async deleteCategory(categoryId: string): Promise<void> {
-        validateProvidedId(categoryId);
-        await this.categoryRepository.removeCategory(categoryId);
-    }
-
-    /**
      * Updates an existing category by its ID.
      *
      * @param {string} categoryId - The ID of the category to be updated.
@@ -182,16 +172,6 @@ export class ProductService {
             throw new BadRequestException(NOT_FOUND_PRODUCT);
         }
         return product
-    }
-
-    /**
-     * Deletes a product by its ID.
-     *
-     * @param productId - The ID of the product to delete.
-     */
-    async deleteProduct(productId: string): Promise<void> {
-        validateProvidedId(productId);
-        await this.productRepository.removeProduct(productId)
     }
 
     /**

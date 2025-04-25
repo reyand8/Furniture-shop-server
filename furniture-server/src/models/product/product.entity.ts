@@ -45,6 +45,9 @@ export class ProductEntity extends AbstractEntity{
   @Column({ default: true })
   isAvailable?: boolean;
 
+  @Column({ default: true })
+  isActive: boolean;
+
   @ManyToOne((): typeof CategoryEntity=> CategoryEntity, (category: CategoryEntity): ProductEntity[] =>
       category.products, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'categoryId' })

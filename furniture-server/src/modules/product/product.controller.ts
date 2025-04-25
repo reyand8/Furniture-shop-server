@@ -55,18 +55,6 @@ export class ProductController {
     }
 
     /**
-     * Deletes a category by its ID.
-     * @param {string} id - The ID of the category to be deleted.
-     * @returns {Promise<void>} A promise indicating the deletion status.
-     */
-    @Delete('category/:id')
-    @Roles(EUserRole.ADMIN, EUserRole.SUPER_ADMIN)
-    @UseGuards(AuthGuard('jwt'), RolesGuard)
-    async deleteCategory(@Param('id') id: string): Promise<void> {
-        return this.productService.deleteCategory(id);
-    }
-
-    /**
      * Updates a category by its ID.
      * @param {string} id - The ID of the category to be updated.
      * @param {UpdateCategoryDto} updateCategoryDto - DTO containing the updated category data.
@@ -137,18 +125,6 @@ export class ProductController {
     @Get('product/:id')
     async getProduct(@Param('id') id: string): Promise<ProductEntity | null> {
         return this.productService.getProductById(id);
-    }
-
-    /**
-     * Deletes a product by its ID.
-     * @param {string} id - The ID of the product to delete.
-     * @returns {Promise<void>} A promise indicating the deletion result.
-     */
-    @Delete('product/:id')
-    @Roles(EUserRole.ADMIN, EUserRole.SUPER_ADMIN)
-    @UseGuards(AuthGuard('jwt'), RolesGuard)
-    async deleteProduct(@Param('id') id: string): Promise<void> {
-        return this.productService.deleteProduct(id);
     }
 
     /**
