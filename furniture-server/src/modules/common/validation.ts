@@ -1,17 +1,12 @@
 import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 
-import { ERROR_MESSAGES, UUID_REGEX } from './constants';
+import { ERROR_MESSAGES } from './constants';
 import { ProductType } from '../../models/product/product.entity';
 import { EUserRole } from '../../models/user/user.entity';
 
 
 const {
-    REQUIRED_USER_ID_AND_CONTACT_INFO_ID,
-    REQUIRED_ID,
     REQUIRED_PRODUCT_TYPE,
-    INVALID_USER_ID,
-    INVALID_CONTACT_INFO_ID,
-    INVALID_ID_FORMAT,
     NOT_FOUND_DTO,
     INVALID_PRODUCT_TYPE,
     INVALID_PAGE,
@@ -43,16 +38,6 @@ export function validateDtoFields<T>(
 }
 
 /**
- * Validates a UUID format using a regular expression.
- *
- * @param uuid - The UUID string to validate
- * @returns True if the UUID format is valid, otherwise false
- */
-export function validateUUID(uuid: string): boolean {
-    return UUID_REGEX.test(uuid);
-}
-
-/**
  * Validates that the provided DTO is not null, undefined, or an empty object.
  * Throws NotFoundException if the DTO is missing or contains no fields.
  *
@@ -62,43 +47,6 @@ export function validateUUID(uuid: string): boolean {
 export function validateDtoNotEmpty<T>(dto: T): void {
     if (!dto || !Object.keys(dto).length) {
         throw new NotFoundException(NOT_FOUND_DTO);
-    }
-}
-
-/**
- * Validates both contactInfoId and userId, checking that both are present and
- * the contactInfoId format is valid.
- * Throws BadRequestException if any validation fails.
- *
- * @param contactInfoId - The contact information ID to validate
- * @param userId - The user ID to validate
- */
-export function validateIds(contactInfoId: string, userId: string): void {
-    if (!contactInfoId || !userId) {
-        throw new BadRequestException(REQUIRED_USER_ID_AND_CONTACT_INFO_ID);
-    }
-    if (!validateUUID(contactInfoId)) {
-        throw new BadRequestException(INVALID_CONTACT_INFO_ID);
-    }
-    if (!validateUUID(userId)) {
-        throw new BadRequestException(INVALID_USER_ID);
-    }
-}
-
-/**
- * Validates the provided ID by ensuring it is both present and in a valid UUID format.
- *
- * @param {string} id - The ID to be validated.
- *
- * @throws {BadRequestException} If the ID is not provided.
- * @throws {BadRequestException} If the ID is not a valid UUID.
- */
- export function validateProvidedId(id: string): void {
-    if (!id) {
-        throw new BadRequestException(REQUIRED_ID);
-    }
-    if (!validateUUID(id)) {
-        throw new BadRequestException(INVALID_ID_FORMAT);
     }
 }
 

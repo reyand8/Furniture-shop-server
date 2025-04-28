@@ -1,6 +1,7 @@
 import {
-    Body, Controller, Delete, Get,
-    Param, Post, Put, Query, UseGuards,
+    Body, Controller, Get,
+    Param, ParseUUIDPipe, Post,
+    Put, Query, UseGuards,
     UseInterceptors
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -37,9 +38,11 @@ export class ProductController {
      * Retrieves single category by id.
      * @returns {Promise<CategoryEntity>} Selected category.
      */
-    @Get('category/:id')
-    async getCategory(@Param('id') id: string): Promise<CategoryEntity> {
-        return this.productService.getCategory(id);
+    @Get('category/:uuid')
+    async getCategory(
+        @Param('uuid', new ParseUUIDPipe()) categoryId: string
+    ): Promise<CategoryEntity> {
+        return this.productService.getCategory(categoryId);
     }
 
     /**
@@ -50,24 +53,26 @@ export class ProductController {
     @Post('category')
     @Roles(EUserRole.ADMIN, EUserRole.SUPER_ADMIN)
     @UseGuards(AuthGuard('jwt'), RolesGuard)
-    async createCategory(@Body() createCategoryDto: CreateCategoryDto): Promise<CategoryEntity> {
+    async createCategory(
+        @Body() createCategoryDto: CreateCategoryDto
+    ): Promise<CategoryEntity> {
         return this.productService.createCategory(createCategoryDto.name);
     }
 
     /**
      * Updates a category by its ID.
-     * @param {string} id - The ID of the category to be updated.
+     * @param {string} categoryId - The ID of the category to be updated.
      * @param {UpdateCategoryDto} updateCategoryDto - DTO containing the updated category data.
      * @returns {Promise<CategoryEntity>} The updated category.
      */
-    @Put('category/:id')
+    @Put('category/:uuid')
     @Roles(EUserRole.ADMIN, EUserRole.SUPER_ADMIN)
     @UseGuards(AuthGuard('jwt'), RolesGuard)
     async updateCategory(
-        @Param('id') id: string,
+        @Param('uuid', new ParseUUIDPipe()) categoryId: string,
         @Body() updateCategoryDto: UpdateCategoryDto
     ): Promise<CategoryEntity> {
-        return this.productService.updateCategory(id, updateCategoryDto);
+        return this.productService.updateCategory(categoryId, updateCategoryDto);
     }
 
     /**
@@ -97,34 +102,38 @@ export class ProductController {
     @Post('product')
     @Roles(EUserRole.ADMIN, EUserRole.SUPER_ADMIN)
     @UseGuards(AuthGuard('jwt'), RolesGuard)
-    async createProduct(@Body() createProductDto: CreateProductDto): Promise<ProductEntity> {
+    async createProduct(
+        @Body() createProductDto: CreateProductDto
+    ): Promise<ProductEntity> {
         return this.productService.createProduct(createProductDto);
     }
 
     /**
      * Updates an existing product by its ID.
-     * @param {string} id - Product ID.
+     * @param {string} productId - Product ID.
      * @param {UpdateProductDto} updateProductDto - DTO with updated data.
      * @returns {Promise<ProductEntity>} The updated product.
      */
-    @Put('product/:id')
+    @Put('product/:uuid')
     @Roles(EUserRole.ADMIN, EUserRole.SUPER_ADMIN)
     @UseGuards(AuthGuard('jwt'), RolesGuard)
     async updateProduct(
-        @Param('id') id: string,
+        @Param('uuid', new ParseUUIDPipe()) productId: string,
         @Body() updateProductDto: UpdateProductDto
     ): Promise<ProductEntity> {
-        return this.productService.updateProduct(id, updateProductDto);
+        return this.productService.updateProduct(productId, updateProductDto);
     }
 
     /**
      * Retrieves a single product by ID.
-     * @param {string} id - The ID of the product.
+     * @param {string} productId - The ID of the product.
      * @returns {Promise<ProductEntity | null>} The requested product.
      */
-    @Get('product/:id')
-    async getProduct(@Param('id') id: string): Promise<ProductEntity | null> {
-        return this.productService.getProductById(id);
+    @Get('product/:uuid')
+    async getProduct(
+        @Param('uuid', new ParseUUIDPipe()) productId: string,
+    ): Promise<ProductEntity | null> {
+        return this.productService.getProductById(productId);
     }
 
     /**
@@ -133,7 +142,9 @@ export class ProductController {
      * @returns {Promise<ProductEntity[]>} List of related products.
      */
     @Get('relative-products')
-    async getRelativeProducts(@Query('type') type: ProductType): Promise<ProductEntity[]> {
+    async getRelativeProducts(
+        @Query('type') type: ProductType
+    ): Promise<ProductEntity[]> {
         return this.productService.getRelativeProducts(type);
     }
 
@@ -143,7 +154,9 @@ export class ProductController {
      * @returns {Promise<ProductEntity[]>} List of products matching the search term.
      */
     @Get('search')
-    async searchProductByName(@Query('name') name: string): Promise<ProductEntity[]> {
+    async searchProductByName(
+        @Query('name') name: string
+    ): Promise<ProductEntity[]> {
         return this.productService.searchProductByName(name);
     }
 

@@ -1,6 +1,8 @@
 import {
     Controller, Get, Body,
-    Request, Put, UseGuards, Post, Delete, Param, Query, UseInterceptors
+    Request, Put, UseGuards,
+    Post, Delete, Param, Query,
+    UseInterceptors, ParseUUIDPipe
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
@@ -46,11 +48,11 @@ export class UserController {
      * @param updateUserRoleDto - DTO containing the new role.
      * @returns A promise resolving to the updated user with partial information.
      */
-    @Put(':id')
+    @Put(':uuid')
     @Roles(EUserRole.SUPER_ADMIN)
     @UseGuards(AuthGuard('jwt'), RolesGuard)
     async updateUserFields(
-        @Param('id') userId: string,
+        @Param('uuid', new ParseUUIDPipe()) userId: string,
         @Body() updateUserRoleDto: UpdateUserFieldsDto
     ): Promise<Partial<UserEntity>> {
         return this.userService.updateUserFields(userId, updateUserRoleDto);
@@ -113,10 +115,10 @@ export class UserController {
      * @param req The request object containing the current user's information.
      * @returns The contact information matching the provided ID.
      */
-    @Get('contact-info/:id')
+    @Get('contact-info/:uuid')
     @UseGuards(AuthGuard('jwt'))
     async getContactInfoById(
-        @Param('id') contactInfoId: string,
+        @Param('uuid', new ParseUUIDPipe()) contactInfoId: string,
         @Request() req: any): Promise<ContactInfoEntity> {
         return this.userService.getContactInfoByIdAndUser(contactInfoId, req.user.id);
     }
@@ -128,14 +130,16 @@ export class UserController {
      * @param req The request object containing the current user's information.
      * @returns The updated contact information.
      */
-    @Put('contact-info/:id')
+    @Put('contact-info/:uuid')
     @UseGuards(AuthGuard('jwt'))
     async updateContactInfoById(
-        @Param('id') contactInfoId: string,
+        @Param('uuid', new ParseUUIDPipe()) contactInfoId: string,
         @Body() updateContactInfoDto: UpdateContactInfoDto,
         @Request() req: any
     ): Promise<ContactInfoEntity> {
-        return this.userService.updateContactInfoById(contactInfoId, updateContactInfoDto, req.user.id);
+        return this.userService.updateContactInfoById(
+            contactInfoId, updateContactInfoDto, req.user.id
+        );
     }
 
     /**
@@ -144,10 +148,10 @@ export class UserController {
      * @param req The request object containing the current user's information.
      * @returns A promise that resolves once the contact information is deleted.
      */
-    @Delete('contact-info/:id')
+    @Delete('contact-info/:uuid')
     @UseGuards(AuthGuard('jwt'))
     async delete(
-        @Param('id') contactInfoId: string,
+        @Param('uuid', new ParseUUIDPipe()) contactInfoId: string,
         @Request() req: any): Promise<void> {
         return this.userService.deleteContactInfo(contactInfoId, req.user.id);
     }

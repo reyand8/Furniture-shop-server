@@ -15,8 +15,6 @@ import {
 import {
     validateDtoFields,
     validateDtoNotEmpty,
-    validateIds,
-    validateProvidedId,
 } from '../common/validation';
 import { UserRepository } from './repository/user.repository';
 import { ContactInfoRepository } from './repository/contactInfo.repository';
@@ -105,7 +103,6 @@ export class UserService {
      * @returns A list of contact information associated with the user
      */
     async getContactInfo(userId: string): Promise<ContactInfoEntity[]> {
-        validateProvidedId(userId);
         return this.contactInfoRepository.findAll(userId);
     }
 
@@ -122,7 +119,6 @@ export class UserService {
     async createContactInfo(
         createContactInfoDto: CreateContactInfoDto,
         userId: string): Promise<ContactInfoEntity> {
-        validateProvidedId(userId);
         validateDtoNotEmpty(createContactInfoDto);
         const user: {id: string} = { id: userId };
         return this.contactInfoRepository.createAndSave(createContactInfoDto, user);
@@ -143,7 +139,6 @@ export class UserService {
         contactInfoId: string,
         userId: string
     ): Promise<ContactInfoEntity> {
-        validateIds(contactInfoId, userId);
         const contactInfo: ContactInfoEntity | null =
             await this.contactInfoRepository.findOneByIds(contactInfoId, userId);
         if (!contactInfo) {
@@ -169,7 +164,6 @@ export class UserService {
         updateContactInfoDto: UpdateContactInfoDto,
         userId: string
     ): Promise<ContactInfoEntity> {
-        validateProvidedId(contactInfoId);
         validateDtoNotEmpty(updateContactInfoDto);
         const contactInfo: ContactInfoEntity =
             await this.getContactInfoByIdAndUser(contactInfoId, userId);
@@ -192,7 +186,6 @@ export class UserService {
         contactInfoId: string,
         userId: string
     ): Promise<void> {
-        validateProvidedId(contactInfoId);
         const contactInfo: ContactInfoEntity =
             await this.getContactInfoByIdAndUser(contactInfoId, userId);
         await this.contactInfoRepository.remove(contactInfo);
