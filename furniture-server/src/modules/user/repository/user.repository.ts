@@ -25,13 +25,15 @@ export class UserRepository {
     }
 
     /**
-     * Finds a user by ID.
-     * @param userId - The ID of the user.
-     * @returns A promise resolving to the UserEntity or null if not found.
+     * Finds a user by a dynamic field and its corresponding value.
+     *
+     * @param field - The name of the field to filter by (e.g., "email", "id").
+     * @param value - The value to match against the specified field.
+     * @returns A promise that resolves to the matching UserEntity or null if not found.
      */
-    async findById(userId: string): Promise<UserEntity | null> {
+    async findBy(field: string, value: string): Promise<UserEntity | null> {
         return this.userRepo.findOne({
-            where: { id: userId },
+            where: { [field]: value },
         });
     }
 

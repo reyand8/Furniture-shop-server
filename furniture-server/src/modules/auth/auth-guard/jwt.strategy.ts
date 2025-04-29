@@ -4,7 +4,7 @@ import { Strategy, ExtractJwt } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 
 import { UserEntity } from '../../../models/user/user.entity';
-import { AuthService } from '../auth.service';
+import { UserService } from '../../user/user.service';
 import { ERROR_MESSAGES } from '../../../common/constants'
 
 const {
@@ -20,7 +20,7 @@ const {
 export class JwtStrategy extends PassportStrategy(Strategy) {
 
     constructor(
-        private authService: AuthService,
+        private userService: UserService,
         private configService: ConfigService,
     ) {
         const jwtSecret: string | undefined = configService.get<string>('JWT_SECRET_KEY');
@@ -43,7 +43,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
      * @throws UnauthorizedException if the user is not found.
      */
     async validate(payload: any): Promise<Partial<UserEntity>> {
-        const user: Partial<UserEntity>  = await this.authService.findBy('id', payload.sub);
+        const user: Partial<UserEntity> | null  =
+            await this.userService.findBy('id', payload.sub);
         if (!user) {
             throw new UnauthorizedException(NOT_FOUND_USER_PROFILE);
         }

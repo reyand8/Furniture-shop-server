@@ -9,6 +9,7 @@ import { UserEntity } from '../../models/user/user.entity';
 import { JwtStrategy } from './auth-guard/jwt.strategy';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { UserModule } from '../user/user.module';
 
 
 @Module({
@@ -23,6 +24,7 @@ import { AuthService } from './auth.service';
             }),
             inject: [ConfigService],
         }),
+        UserModule,
     ],
     controllers: [AuthController],
     providers: [JwtStrategy, AuthService],

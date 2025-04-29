@@ -7,6 +7,7 @@ export const ERROR_MESSAGES = {
     NOT_FOUND_DTO: 'DTO is empty or not found',
     NOT_FOUND_CATEGORY: 'Category not found',
     NOT_FOUND_PRODUCT: 'Product not found',
+    NOT_FOUND_PRODUCT_IDS: 'Product ids not found',
     NOT_FOUND_PRODUCT_IN_ORDER: 'One or more products were not found:',
     NOT_FOUND_ORDER: 'Order not found or does not belong to the user',
 
@@ -16,12 +17,17 @@ export const ERROR_MESSAGES = {
 
     INVALID_PRODUCT_TYPE: 'Invalid product type',
     INVALID_CREDENTIALS: 'Invalid credentials',
+    INVALID_REQUEST: 'Bad Request',
 
     ERROR_SERVER: 'Internal server error:',
+    ERROR_CREATE_USER: 'Create user error',
     ERROR_PERMISSION_ORDER_UPDATE: 'You cannot perform this action',
-    FORBIDDEN_ACCESS: 'Only super admin can perform this action',
+
     EXISTS_CATEGORY_NAME: 'Category name exists',
+    EXISTS_EMAIL: 'This email is already in use',
+
     UNAVAILABLE_PRODUCTS: 'There are some unavailable products:',
+    FORBIDDEN_ACCESS: 'Only super admin can perform this action',
 
     INACTIVE_USER_PROFILE: 'User profile is inactive',
 

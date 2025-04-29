@@ -20,7 +20,7 @@ import {
 } from '../../common/validation';
 import { ERROR_MESSAGES } from '../../common/constants';
 import { UserService } from '../user/user.service';
-import { ProductRepository } from '../product/repository/product.repository';
+import { ProductService } from '../product/product.service';
 
 
 const {
@@ -33,9 +33,9 @@ const {
 @Injectable()
 export class OrderService {
     constructor(
-        private readonly orderRepository: OrderRepository,
         private readonly orderDetailsFactory: OrderDetailsFactory,
-        private readonly productRepository: ProductRepository,
+        private readonly orderRepository: OrderRepository,
+        private readonly productService: ProductService,
         private readonly userService: UserService,
     ) {}
 
@@ -178,7 +178,7 @@ export class OrderService {
             orderItems.map((item: CreateOrderItemDto): string => item.productId);
 
         const selectedProducts: ProductEntity[] =
-            await this.productRepository.findProductsByIds(productIds);
+            await this.productService.getProductByIds(productIds);
 
         const foundIds: Set<string> = new Set(
             selectedProducts.map((product: ProductEntity): string => product.id)
