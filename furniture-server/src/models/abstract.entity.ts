@@ -1,5 +1,8 @@
-import { PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, BaseEntity } from 'typeorm';
-
+import {
+    PrimaryGeneratedColumn, CreateDateColumn,
+    UpdateDateColumn, BaseEntity, BeforeInsert
+} from 'typeorm';
+import { v4 as uuidv4 } from 'uuid';
 
 export abstract class AbstractEntity extends BaseEntity {
     @PrimaryGeneratedColumn('uuid')
@@ -10,4 +13,9 @@ export abstract class AbstractEntity extends BaseEntity {
 
     @UpdateDateColumn()
     updatedAt: Date;
+
+    @BeforeInsert()
+    generateId() {
+        this.id = uuidv4();
+    }
 }

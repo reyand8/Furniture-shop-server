@@ -9,7 +9,8 @@ import { ERROR_MESSAGES } from '../../common/constants'
 
 const {
     INACTIVE_USER_PROFILE,
-    NOT_FOUND_USER_PROFILE
+    NOT_FOUND_USER_PROFILE,
+    NOT_FOUND_JWT_KEY
 } = ERROR_MESSAGES
 
 /**
@@ -25,7 +26,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         const jwtSecret: string | undefined = configService.get<string>('JWT_SECRET_KEY');
 
         if (!jwtSecret) {
-            throw new Error('JWT_SECRET_KEY is not defined');
+            throw new Error(NOT_FOUND_JWT_KEY);
         }
 
         super({

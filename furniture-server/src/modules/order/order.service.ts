@@ -17,7 +17,6 @@ import { OrderDetailsFactory } from './factory/orderDetails.factory';
 import {
     validateDtoFields,
     validateDtoNotEmpty,
-    validateProvidedId,
 } from '../common/validation';
 import { ERROR_MESSAGES } from '../common/constants';
 import { UserService } from '../user/user.service';
@@ -99,7 +98,6 @@ export class OrderService {
      * @throws NotFoundException if the order is not found.
      */
     async findOneOrderByUserId(userId: string, orderId: string): Promise<OrderEntity> {
-        validateProvidedId(orderId);
         const order: OrderEntity | null =
             await this.orderRepository.getOneOrderByUser(userId, orderId);
         if (!order) {
@@ -124,7 +122,6 @@ export class OrderService {
         orderId: string,
         updateOrderStatusDto: UpdateOrderStatusDto,
     ): Promise<OrderEntity> {
-        validateProvidedId(orderId);
         const order: OrderEntity | null =
             await this.orderRepository.getOneOrderByOrderId(orderId);
         if (!order) {
@@ -155,7 +152,6 @@ export class OrderService {
     async updateOrder( user: UserEntity, updateOrderDto: UpdateOrderDto, orderId: string
     ): Promise<OrderEntity> {
         validateDtoNotEmpty(updateOrderDto);
-        validateProvidedId(orderId);
         const { contactInfoId } = updateOrderDto
         const order: OrderEntity = await this.findOneOrderByUserId(user.id, orderId);
         this.checkCreatedTime(order.createdAt);

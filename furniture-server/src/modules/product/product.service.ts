@@ -7,7 +7,6 @@ import {
 import { CategoryEntity } from '../../models/category/category.entity';
 import { ERROR_MESSAGES } from '../common/constants';
 import {
-    validateProvidedId,
     validateDtoFields,
     validateDtoNotEmpty,
     validateProductFilters,
@@ -51,7 +50,6 @@ export class ProductService {
      * @throws {BadRequestException} If the provided ID is invalid.
      */
     async getCategory(categoryId: string): Promise<CategoryEntity> {
-        validateProvidedId(categoryId);
         const category: CategoryEntity | null =
             await this.categoryRepository.findById(categoryId);
         if (!category) {
@@ -90,7 +88,6 @@ export class ProductService {
         categoryId: string,
         updateCategoryDto: UpdateCategoryDto
     ): Promise<CategoryEntity> {
-        validateProvidedId(categoryId);
         validateDtoNotEmpty(updateCategoryDto);
         const category: CategoryEntity | null =
             await this.categoryRepository.findById(categoryId);
@@ -165,7 +162,6 @@ export class ProductService {
      * @returns The product entity if found, or throws an error if not found.
      */
     async getProductById(productId: string): Promise<ProductEntity | null> {
-        validateProvidedId(productId);
         const product: ProductEntity | null =
             await this.productRepository.findById(productId)
         if (!product) {

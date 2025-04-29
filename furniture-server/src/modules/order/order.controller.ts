@@ -1,7 +1,7 @@
 import {
     Controller, Get, Post, Param,
     Body, UseGuards, Request, Put,
-    UseInterceptors
+    UseInterceptors, ParseUUIDPipe
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
@@ -55,17 +55,17 @@ export class OrderController {
      * Retrieves a specific order by its ID for the authenticated user.
      * Requires JWT authentication.
      *
-     * @param id - The ID of the order to retrieve
+     * @param orderId - The ID of the order to retrieve
      * @param req - The request object, containing authenticated user info
      * @returns The found OrderEntity
      */
-    @Get(':id')
+    @Get(':uuid')
     @UseGuards(AuthGuard('jwt'))
     async findOne(
-        @Param('id') id: string,
+        @Param('uuid', new ParseUUIDPipe()) orderId: string,
         @Request() req: any
     ): Promise<OrderEntity> {
-        return this.orderService.findOneOrderByUserId(req.user.id, id);
+        return this.orderService.findOneOrderByUserId(req.user.id, orderId);
     }
 
     /**
@@ -76,11 +76,11 @@ export class OrderController {
      * @param updateOrderStatusDto - The DTO containing the updated order status
      * @returns The updated OrderEntity
      */
-    @Post('update-status/:orderId')
+    @Post('update-status/:uuid')
     @Roles(EUserRole.SUPER_ADMIN, EUserRole.ADMIN)
     @UseGuards(AuthGuard('jwt'), RolesGuard)
     async updateOrderStatus(
-        @Param('orderId') orderId: string,
+        @Param('uuid', new ParseUUIDPipe()) orderId: string,
         @Body() updateOrderStatusDto: UpdateOrderStatusDto,
     ): Promise<OrderEntity> {
         return this.orderService.updateOrderStatus(orderId, updateOrderStatusDto);
@@ -90,18 +90,18 @@ export class OrderController {
      * Updates an existing order by its ID for the authenticated user.
      * Requires JWT authentication.
      *
-     * @param id - The ID of the order to update
+     * @param orderId - The ID of the order to update
      * @param updateOrderDto - The DTO containing the updated order details
      * @param req - The request object, containing authenticated user info
      * @returns The updated OrderEntity
      */
-    @Put('update/:id')
+    @Put('update/:uuid')
     @UseGuards(AuthGuard('jwt'))
     async updateOrder(
-        @Param('id') id: string,
+        @Param('uuid', new ParseUUIDPipe()) orderId: string,
         @Body() updateOrderDto: UpdateOrderDto,
         @Request() req: any
     ): Promise<OrderEntity> {
-        return this.orderService.updateOrder(req.user.id, updateOrderDto, id);
+        return this.orderService.updateOrder(req.user.id, updateOrderDto, orderId);
     }
 }
