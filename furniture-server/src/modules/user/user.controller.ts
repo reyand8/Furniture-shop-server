@@ -16,7 +16,7 @@ import { Roles } from '../auth/roles-guard/roles.decorator';
 import { RolesGuard } from '../auth/roles-guard/roles.guard';
 import { GetAllUsersDto } from './dto/getAllUsers.dto';
 import { UpdateUserFieldsDto } from './dto/updateUserFields.dto';
-import { ErrorInterceptor } from '../common/errorInterceptor';
+import { ErrorInterceptor } from '../../common/errorInterceptor';
 
 
 @UseInterceptors(ErrorInterceptor)

@@ -13,7 +13,7 @@ import { UpdateOrderStatusDto } from './dto/updateOrderStatus.dto';
 import { Roles } from '../auth/roles-guard/roles.decorator';
 import { EUserRole } from '../../models/user/user.entity';
 import { RolesGuard } from '../auth/roles-guard/roles.guard';
-import { ErrorInterceptor } from '../common/errorInterceptor';
+import { ErrorInterceptor } from '../../common/errorInterceptor';
 
 
 @UseInterceptors(ErrorInterceptor)

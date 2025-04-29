@@ -5,7 +5,7 @@ import { ConfigService } from '@nestjs/config';
 
 import { UserEntity } from '../../../models/user/user.entity';
 import { AuthService } from '../auth.service';
-import { ERROR_MESSAGES } from '../../common/constants'
+import { ERROR_MESSAGES } from '../../../common/constants'
 
 const {
     INACTIVE_USER_PROFILE,

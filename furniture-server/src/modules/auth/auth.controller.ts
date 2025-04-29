@@ -12,7 +12,7 @@ import { RegisterByAdminDto } from './dto/registerByAdmin.dto';
 import { Roles } from './roles-guard/roles.decorator';
 import { EUserRole } from '../../models/user/user.entity';
 import { RolesGuard } from './roles-guard/roles.guard';
-import { ErrorInterceptor } from '../common/errorInterceptor';
+import { ErrorInterceptor } from '../../common/errorInterceptor';
 
 
 @UseInterceptors(ErrorInterceptor)

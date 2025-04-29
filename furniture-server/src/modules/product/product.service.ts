@@ -5,13 +5,13 @@ import {
 } from '@nestjs/common';
 
 import { CategoryEntity } from '../../models/category/category.entity';
-import { ERROR_MESSAGES } from '../common/constants';
+import { ERROR_MESSAGES } from '../../common/constants';
 import {
     validateDtoFields,
     validateDtoNotEmpty,
     validateProductFilters,
     validateProductType
-} from '../common/validation';
+} from '../../common/validation';
 import { UpdateCategoryDto } from './dto/updateCategory.dto';
 import { ProductEntity, ProductType } from '../../models/product/product.entity';
 import { UpdateProductDto } from './dto/updateProduct.dto';
