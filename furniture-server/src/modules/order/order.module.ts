@@ -15,6 +15,9 @@ import { ProductRepository } from '../product/repository/product.repository';
 import { UserService } from '../user/user.service';
 import { UserRepository } from '../user/repository/user.repository';
 import { ContactInfoRepository } from '../user/repository/contactInfo.repository';
+import { ProductService } from '../product/product.service';
+import { CategoryRepository } from '../product/repository/category.repository';
+import { CategoryEntity } from '../../models/category/category.entity';
 
 
 @Module({
@@ -24,7 +27,8 @@ import { ContactInfoRepository } from '../user/repository/contactInfo.repository
             OrderDetailsEntity,
             UserEntity,
             ContactInfoEntity,
-            ProductEntity
+            ProductEntity,
+            CategoryEntity,
         ]),
         PassportModule.register({ defaultStrategy: 'jwt' }),
     ],
@@ -32,9 +36,11 @@ import { ContactInfoRepository } from '../user/repository/contactInfo.repository
     providers: [
         OrderService,
         UserService,
+        ProductService,
         UserRepository,
         ContactInfoRepository,
         OrderRepository,
+        CategoryRepository,
         ProductRepository,
         OrderDetailsFactory,
     ],

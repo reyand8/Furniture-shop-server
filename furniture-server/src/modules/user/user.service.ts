@@ -20,6 +20,7 @@ import { UserRepository } from './repository/user.repository';
 import { ContactInfoRepository } from './repository/contactInfo.repository';
 import { GetAllUsersDto } from './dto/getAllUsers.dto';
 import { UpdateUserFieldsDto } from './dto/updateUserFields.dto';
+import { IUserRegister } from '../auth/auth.interface';
 
 
 const { NOT_FOUND_CONTACT_INFO, NOT_FOUND_USER_PROFILE } = ERROR_MESSAGES;
@@ -59,7 +60,7 @@ export class UserService {
         userId: string,
         updateUserFieldsDto: UpdateUserFieldsDto
     ): Promise<Partial<UserEntity>> {
-        const user: UserEntity | null = await this.userRepository.findById(userId);
+        const user: UserEntity | null = await this.userRepository.findBy('id', userId);
         if (!user) {
             throw new NotFoundException(NOT_FOUND_USER_PROFILE);
         }
@@ -71,6 +72,16 @@ export class UserService {
         const updatedUser: UserEntity = await this.userRepository.createAndSave(user);
         const { password, ...userWithoutPassword } = updatedUser;
         return userWithoutPassword;
+    }
+
+    /**
+     * Creates a new user profile and saves it to the database.
+     *
+     * @param user - The user registration data used to create the profile.
+     * @returns A promise that resolves to the newly created UserEntity.
+     */
+    async createProfile(user: IUserRegister): Promise<UserEntity> {
+        return this.userRepository.createAndSave(user);
     }
 
     /**
@@ -189,5 +200,29 @@ export class UserService {
         const contactInfo: ContactInfoEntity =
             await this.getContactInfoByIdAndUser(contactInfoId, userId);
         await this.contactInfoRepository.remove(contactInfo);
+    }
+
+    /**
+     * Finds a user by the specified field and value.
+     * Throws a NotFoundException if the field or value is missing,
+     * or if the user is not found.
+     * Returns the user data excluding the password field.
+     *
+     * @param field - The field name to search by (e.g., 'email', 'id').
+     * @param value - The value of the field to match.
+     * @returns A UserEntity object
+     */
+    async findBy(field: string, value: string): Promise<UserEntity | null> {
+        if (!field || !value) {
+            throw new NotFoundException(NOT_FOUND_USER_PROFILE);
+        }
+
+        const user: UserEntity | null = await this.userRepository.findBy(field, value);
+
+        if (!user) {
+            throw new NotFoundException(NOT_FOUND_USER_PROFILE);
+        }
+
+        return user;
     }
 }

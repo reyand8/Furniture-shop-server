@@ -22,8 +22,13 @@ import { CategoryRepository } from './repository/category.repository';
 import { ProductRepository } from './repository/product.repository';
 
 
-const { REQUIRED_CATEGORY_NAME, NOT_FOUND_CATEGORY,
-    REQUIRED_PRODUCT_NAME, NOT_FOUND_PRODUCT, EXISTS_CATEGORY_NAME
+const {
+    REQUIRED_CATEGORY_NAME,
+    NOT_FOUND_CATEGORY,
+    REQUIRED_PRODUCT_NAME,
+    NOT_FOUND_PRODUCT,
+    EXISTS_CATEGORY_NAME,
+    NOT_FOUND_PRODUCT_IDS
 } = ERROR_MESSAGES;
 
 @Injectable()
@@ -168,6 +173,20 @@ export class ProductService {
             throw new BadRequestException(NOT_FOUND_PRODUCT);
         }
         return product
+    }
+
+    /**
+     * Retrieves products by their IDs.
+     * Throws a BadRequestException if the input array is empty or undefined.
+     *
+     * @param productIds - An array of product ID strings to search for.
+     * @returns A promise resolving to an array of matching ProductEntity objects.
+     */
+    async getProductByIds(productIds: string[]): Promise<ProductEntity[]> {
+        if (!productIds || productIds.length === 0) {
+            throw new BadRequestException(NOT_FOUND_PRODUCT_IDS);
+        }
+        return this.productRepository.findProductsByIds(productIds);
     }
 
     /**

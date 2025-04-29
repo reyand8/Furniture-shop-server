@@ -1,28 +1,30 @@
 import {
     BadRequestException, ForbiddenException, HttpStatus,
-    Injectable, NotFoundException, UnauthorizedException
+    Injectable, UnauthorizedException
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
-import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 
-import { ITokens, IUser, IUserRegister } from './auth.interface';
+import { ITokens, IUser } from './auth.interface';
 import { UserEntity } from '../../models/user/user.entity';
 import { LoginUserDto } from './dto/loginUser.dto';
+import { RegisterUserDto } from './dto/registerUser.dto';
 import { ERROR_MESSAGES } from '../../common/constants';
+import { UserService } from '../user/user.service';
 
 const {
     INACTIVE_USER_PROFILE,
-    INVALID_CREDENTIALS
+    INVALID_CREDENTIALS,
+    EXISTS_EMAIL,
+    INVALID_REQUEST,
+    ERROR_CREATE_USER,
 } = ERROR_MESSAGES
 
 
 @Injectable()
 export class AuthService {
     constructor(
-      @InjectRepository(UserEntity)
-      private userRepository: Repository<UserEntity>,
+      private userService: UserService,
       private jwtService: JwtService
     ) {}
 
@@ -42,7 +44,7 @@ export class AuthService {
      */
     async emailExists(email: string): Promise<boolean> {
         const existingUser: UserEntity | null =
-            await this.userRepository.findOne({ where: { email } });
+            await this.userService.findBy('email', email);
         return !!existingUser;
     }
 
@@ -64,20 +66,20 @@ export class AuthService {
      * @returns A promise that resolves to an object containing access and refresh tokens.
      * @throws BadRequestException if the email is already in use.
      */
-    async register(regUser: IUserRegister): Promise<ITokens> {
+    async register(regUser: RegisterUserDto): Promise<ITokens> {
         const { email, password } = regUser;
         if (await this.emailExists(email)) {
             throw new BadRequestException({
                 statusCode: HttpStatus.BAD_REQUEST,
-                message: 'This email is already in use',
-                error: 'Bad Request',
+                message: EXISTS_EMAIL,
+                error: INVALID_REQUEST,
             });
         }
         regUser.password = await this.hashPassword(password);
-        const user = await this.userRepository.save(regUser);
+        const user: UserEntity = await this.userService.createProfile(regUser);
 
         if (!user) {
-            throw new Error('Create user error');
+            throw new Error(ERROR_CREATE_USER);
         }
 
         const { access_token, refresh_token } = await this.generateTokens(user);
@@ -115,35 +117,13 @@ export class AuthService {
     }
 
     /**
-     * Finds a user by a given field (e.g., id, email, etc.).
-     * @param field - The field to find by (e.g., id, email).
-     * @param value - The value of the field (e.g., userId or email).
-     * @returns The found user entity.
-     * @throws BadRequestException if the value is invalid.
-     * @throws NotFoundException if the user is not found.
-     */
-    async findBy(field: string, value: string): Promise<Partial<UserEntity>> {
-        if (!value) {
-            throw new BadRequestException('Invalid value');
-        }
-        const user: UserEntity | null = await this.userRepository.findOne({
-            where: { [field]: value },
-        });
-        if (!user) {
-            throw new NotFoundException(`User with ${field}: ${value} not found`);
-        }
-        const { password, ...userWithoutPassword } = user;
-        return userWithoutPassword;
-    }
-
-    /**
      * Validates a user by comparing email and password.
      * @param email - The user's email.
      * @param pass - The user's password.
      * @returns The user if credentials are valid, otherwise null.
      */
     async validateUser(email: string, pass: string): Promise<IUser | null> {
-        const user: UserEntity | null = await this.userRepository.findOne({ where: { email } });
+        const user: UserEntity | null = await this.userService.findBy('email', email);
         if (user && await this.comparePasswords(pass, user.password)) {
             return user;
         }
