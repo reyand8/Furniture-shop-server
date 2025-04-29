@@ -4,7 +4,7 @@ import {
   ValidationError, ValidationPipe } from '@nestjs/common';
 
 import { AppModule } from './app.module';
-import { ErrorInterceptor } from './modules/common/errorInterceptor';
+import { ErrorInterceptor } from './common/errorInterceptor';
 
 
 async function bootstrap(): Promise<void> {

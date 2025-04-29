@@ -17,8 +17,8 @@ import { OrderDetailsFactory } from './factory/orderDetails.factory';
 import {
     validateDtoFields,
     validateDtoNotEmpty,
-} from '../common/validation';
-import { ERROR_MESSAGES } from '../common/constants';
+} from '../../common/validation';
+import { ERROR_MESSAGES } from '../../common/constants';
 import { UserService } from '../user/user.service';
 import { ProductRepository } from '../product/repository/product.repository';
 

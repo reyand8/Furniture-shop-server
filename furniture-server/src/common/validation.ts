@@ -1,7 +1,7 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 import { ERROR_MESSAGES } from './constants';
-import { ProductType } from '../../models/product/product.entity';
+import { ProductType } from '../models/product/product.entity';
 
 
 const {

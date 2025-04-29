@@ -11,11 +11,11 @@ import { ContactInfoEntity }  from '../../models/contact-info/contact-info.entit
 import {
     ERROR_MESSAGES,
     FORBIDDEN_FIELDS_PROFILE,
-} from '../common/constants';
+} from '../../common/constants';
 import {
     validateDtoFields,
     validateDtoNotEmpty,
-} from '../common/validation';
+} from '../../common/validation';
 import { UserRepository } from './repository/user.repository';
 import { ContactInfoRepository } from './repository/contactInfo.repository';
 import { GetAllUsersDto } from './dto/getAllUsers.dto';
