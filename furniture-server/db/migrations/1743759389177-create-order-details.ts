@@ -6,6 +6,7 @@ export class CreateOrderDetails1743759389177 implements MigrationInterface {
     name: string = 'CreateOrderDetails1743759389177';
 
     public async up(queryRunner: QueryRunner): Promise<void> {
+        await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
         await queryRunner.query(`
           CREATE TABLE "order_details" (
             "id" uuid NOT NULL DEFAULT uuid_generate_v4(),

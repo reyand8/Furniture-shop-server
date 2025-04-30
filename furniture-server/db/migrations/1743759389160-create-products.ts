@@ -6,7 +6,7 @@ export class CreateProducts1743759389160 implements MigrationInterface {
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`CREATE TYPE "public"."products_type_enum" AS ENUM('FURNITURE', 'DECOR', 'ACCESSORIES')`);
-
+        await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
         await queryRunner.query(`
             CREATE TABLE "products" (
                 "id" uuid NOT NULL DEFAULT uuid_generate_v4(),

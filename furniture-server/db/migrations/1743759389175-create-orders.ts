@@ -4,18 +4,18 @@ export class CreateOrders1743759389175 implements MigrationInterface {
     name: string = 'CreateOrders1743759389175';
 
     public async up(queryRunner: QueryRunner): Promise<void> {
-
+        await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
         await queryRunner.query(`
         CREATE TYPE "public"."orders_status_enum" AS ENUM(
         'PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELED'
       )
-    `);
+      `);
 
         await queryRunner.query(`
       CREATE TYPE "public"."orders_payment_method_enum" AS ENUM(
         'CREDIT_CARD', 'PAYPAL', 'CASH_ON_DELIVERY'
       )
-    `);
+      `);
 
         await queryRunner.query(`
             CREATE TABLE "orders" (

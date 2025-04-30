@@ -7,8 +7,8 @@ export class CreateUsers1743759389168 implements MigrationInterface {
         await queryRunner.query(`
         CREATE TYPE "public"."users_role_enum" 
         AS ENUM('SUPER_ADMIN', 'ADMIN', 'USER')
-    `);
-
+        `);
+        await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
         await queryRunner.query(`
             CREATE TABLE "users" (
                 "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
