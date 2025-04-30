@@ -10,10 +10,9 @@ import { UpdateContactInfoDto } from './dto/updateContactInfo.dto';
 import { ContactInfoEntity }  from '../../models/contact-info/contact-info.entity';
 import {
     ERROR_MESSAGES,
-    FORBIDDEN_FIELDS_PROFILE,
 } from '../../common/constants';
 import {
-    validateDtoFields,
+    updateEntityWithDto,
     validateDtoNotEmpty,
 } from '../../common/validation';
 import { UserRepository } from './repository/user.repository';
@@ -100,7 +99,7 @@ export class UserService {
     ): Promise<UserEntity> {
         validateDtoNotEmpty(updateUserDto);
         const updatedProfile: UserEntity =
-            validateDtoFields(user, updateUserDto, FORBIDDEN_FIELDS_PROFILE);
+            updateEntityWithDto(user, updateUserDto);
         return this.userRepository.createAndSave(updatedProfile);
     }
 
@@ -178,7 +177,7 @@ export class UserService {
         validateDtoNotEmpty(updateContactInfoDto);
         const contactInfo: ContactInfoEntity =
             await this.getContactInfoByIdAndUser(contactInfoId, userId);
-        const validatedDto: ContactInfoEntity = validateDtoFields(contactInfo, updateContactInfoDto);
+        const validatedDto: ContactInfoEntity = updateEntityWithDto(contactInfo, updateContactInfoDto);
         return this.contactInfoRepository.createAndUpdate(validatedDto);
     }
 

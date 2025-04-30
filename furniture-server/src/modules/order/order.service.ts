@@ -15,7 +15,7 @@ import { UserEntity } from '../../models/user/user.entity';
 import { OrderRepository } from './repository/order.repository';
 import { OrderDetailsFactory } from './factory/orderDetails.factory';
 import {
-    validateDtoFields,
+    updateEntityWithDto,
     validateDtoNotEmpty,
 } from '../../common/validation';
 import { ERROR_MESSAGES } from '../../common/constants';
@@ -128,7 +128,7 @@ export class OrderService {
             throw new NotFoundException(NOT_FOUND_ORDER);
         }
         const validatedDto: OrderEntity =
-            validateDtoFields(order, updateOrderStatusDto);
+            updateEntityWithDto(order, updateOrderStatusDto);
 
         const updatedOrderStatus: OrderEntity =
             await this.orderRepository.createAndSaveOrder(validatedDto);
@@ -161,7 +161,7 @@ export class OrderService {
                 await this.userService.getContactInfo(contactInfoId)
             order.contactInfo = newContactInfo[0];
         }
-        const validatedDto: OrderEntity = validateDtoFields(order, updateOrderDto);
+        const validatedDto: OrderEntity = updateEntityWithDto(order, updateOrderDto);
         return this.orderRepository.createAndSaveOrder(validatedDto);
     }
 
