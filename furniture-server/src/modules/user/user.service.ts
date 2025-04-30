@@ -216,13 +216,6 @@ export class UserService {
         if (!field || !value) {
             throw new NotFoundException(NOT_FOUND_USER_PROFILE);
         }
-
-        const user: UserEntity | null = await this.userRepository.findBy(field, value);
-
-        if (!user) {
-            throw new NotFoundException(NOT_FOUND_USER_PROFILE);
-        }
-
-        return user;
+        return this.userRepository.findBy(field, value);
     }
 }
