@@ -48,7 +48,7 @@ export class UserController {
      * @param updateUserRoleDto - DTO containing the new role.
      * @returns A promise resolving to the updated user with partial information.
      */
-    @Put(':uuid')
+    @Put('/one/:uuid')
     @Roles(EUserRole.SUPER_ADMIN)
     @UseGuards(AuthGuard('jwt'), RolesGuard)
     async updateUserFields(
@@ -66,7 +66,8 @@ export class UserController {
     @Get('me')
     @UseGuards(AuthGuard('jwt'))
     async getProfile(@Request() req: any): Promise<Partial<UserEntity>> {
-        return req.user;
+        const { password, ...userWithoutPassword } = req.user;
+        return userWithoutPassword;
     }
 
     /**
