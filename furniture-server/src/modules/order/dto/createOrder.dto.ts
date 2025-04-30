@@ -1,6 +1,6 @@
 import {
     IsEnum, IsOptional,
-    IsString, ValidateNested
+    IsString, IsUUID, ValidateNested
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -9,7 +9,7 @@ import { CreateOrderItemDto } from './createOrderItem.dto';
 
 
 export class CreateOrderDto {
-    @IsString()
+    @IsUUID('4', { message: 'Contact info ID must be a valid UUID.' })
     contactInfoId: string;
 
     @ValidateNested({ each: true })
