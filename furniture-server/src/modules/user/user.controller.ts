@@ -41,24 +41,6 @@ export class UserController {
     }
 
     /**
-     * Update the role of a specific user.
-     * Accessible only by SUPER_ADMIN.
-     *
-     * @param userId - ID of the user whose role is being updated.
-     * @param updateUserRoleDto - DTO containing the new role.
-     * @returns A promise resolving to the updated user with partial information.
-     */
-    @Put('/one/:uuid')
-    @Roles(EUserRole.SUPER_ADMIN)
-    @UseGuards(AuthGuard('jwt'), RolesGuard)
-    async updateUserFields(
-        @Param('uuid', new ParseUUIDPipe()) userId: string,
-        @Body() updateUserRoleDto: UpdateUserFieldsDto
-    ): Promise<Partial<UserEntity>> {
-        return this.userService.updateUserFields(userId, updateUserRoleDto);
-    }
-
-    /**
      * Get the profile of the currently authenticated user.
      * @param req The request object containing the current user's information.
      * @returns The profile of the current user.
@@ -83,6 +65,24 @@ export class UserController {
         @Request() req: any
     ): Promise<Partial<UserEntity>> {
         return this.userService.updateProfile(req.user, updateUserDto);
+    }
+
+    /**
+     * Update the role of a specific user.
+     * Accessible only by SUPER_ADMIN.
+     *
+     * @param userId - ID of the user whose role is being updated.
+     * @param updateUserRoleDto - DTO containing the new role.
+     * @returns A promise resolving to the updated user with partial information.
+     */
+    @Put(':uuid')
+    @Roles(EUserRole.SUPER_ADMIN)
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
+    async updateUserFields(
+        @Param('uuid', new ParseUUIDPipe()) userId: string,
+        @Body() updateUserRoleDto: UpdateUserFieldsDto
+    ): Promise<Partial<UserEntity>> {
+        return this.userService.updateUserFields(userId, updateUserRoleDto);
     }
 
     /**

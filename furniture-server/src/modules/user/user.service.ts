@@ -96,11 +96,16 @@ export class UserService {
     async updateProfile(
         user: UserEntity,
         updateUserDto: UpdateUserDto
-    ): Promise<UserEntity> {
+    ): Promise<Partial<UserEntity>> {
         validateDtoNotEmpty(updateUserDto);
-        const updatedProfile: UserEntity =
+        const updateEntity: UserEntity =
             updateEntityWithDto(user, updateUserDto);
-        return this.userRepository.createAndSave(updatedProfile);
+
+        const updatedProfile: UserEntity  =
+            await this.userRepository.createAndSave(updateEntity);
+
+        const { password, ...userWithoutPassword } = updatedProfile;
+        return userWithoutPassword;
     }
 
     /**
