@@ -1,9 +1,9 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString, IsUUID } from 'class-validator';
 
 
 export class UpdateOrderDto {
-    @IsString()
     @IsOptional()
+    @IsUUID('4', { message: 'Contact info ID must be a valid UUID.' })
     contactInfoId?: string;
 
     @IsString()

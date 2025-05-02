@@ -7,7 +7,7 @@ import {
 import { CategoryEntity } from '../../models/category/category.entity';
 import { ERROR_MESSAGES } from '../../common/constants';
 import {
-    validateDtoFields,
+    updateEntityWithDto,
     validateDtoNotEmpty,
     validateProductFilters,
     validateProductType
@@ -99,7 +99,7 @@ export class ProductService {
         if (!category) {
             throw new NotFoundException(NOT_FOUND_CATEGORY);
         }
-        const validatedDto: CategoryEntity = validateDtoFields(category, updateCategoryDto);
+        const validatedDto: CategoryEntity = updateEntityWithDto(category, updateCategoryDto);
         return this.categoryRepository.save(validatedDto);
     }
 
@@ -156,7 +156,7 @@ export class ProductService {
         if (!product) {
             throw new NotFoundException(NOT_FOUND_PRODUCT);
         }
-        const validatedDto: ProductEntity = validateDtoFields(product, updateProductDto);
+        const validatedDto: ProductEntity = updateEntityWithDto(product, updateProductDto);
         return this.productRepository.update(validatedDto);
     }
 

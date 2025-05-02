@@ -1,5 +1,3 @@
-export const FORBIDDEN_FIELDS_PROFILE: string[] = ['password', 'id', 'role', 'isActive'];
-
 export const ERROR_MESSAGES = {
     NOT_FOUND_JWT_KEY: 'JWT_SECRET_KEY is not defined',
     NOT_FOUND_USER_PROFILE: 'User profile not found',

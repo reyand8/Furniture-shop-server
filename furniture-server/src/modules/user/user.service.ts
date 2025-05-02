@@ -10,10 +10,9 @@ import { UpdateContactInfoDto } from './dto/updateContactInfo.dto';
 import { ContactInfoEntity }  from '../../models/contact-info/contact-info.entity';
 import {
     ERROR_MESSAGES,
-    FORBIDDEN_FIELDS_PROFILE,
 } from '../../common/constants';
 import {
-    validateDtoFields,
+    updateEntityWithDto,
     validateDtoNotEmpty,
 } from '../../common/validation';
 import { UserRepository } from './repository/user.repository';
@@ -97,11 +96,16 @@ export class UserService {
     async updateProfile(
         user: UserEntity,
         updateUserDto: UpdateUserDto
-    ): Promise<UserEntity> {
+    ): Promise<Partial<UserEntity>> {
         validateDtoNotEmpty(updateUserDto);
-        const updatedProfile: UserEntity =
-            validateDtoFields(user, updateUserDto, FORBIDDEN_FIELDS_PROFILE);
-        return this.userRepository.createAndSave(updatedProfile);
+        const updateEntity: UserEntity =
+            updateEntityWithDto(user, updateUserDto);
+
+        const updatedProfile: UserEntity  =
+            await this.userRepository.createAndSave(updateEntity);
+
+        const { password, ...userWithoutPassword } = updatedProfile;
+        return userWithoutPassword;
     }
 
     /**
@@ -178,7 +182,7 @@ export class UserService {
         validateDtoNotEmpty(updateContactInfoDto);
         const contactInfo: ContactInfoEntity =
             await this.getContactInfoByIdAndUser(contactInfoId, userId);
-        const validatedDto: ContactInfoEntity = validateDtoFields(contactInfo, updateContactInfoDto);
+        const validatedDto: ContactInfoEntity = updateEntityWithDto(contactInfo, updateContactInfoDto);
         return this.contactInfoRepository.createAndUpdate(validatedDto);
     }
 
@@ -216,13 +220,6 @@ export class UserService {
         if (!field || !value) {
             throw new NotFoundException(NOT_FOUND_USER_PROFILE);
         }
-
-        const user: UserEntity | null = await this.userRepository.findBy(field, value);
-
-        if (!user) {
-            throw new NotFoundException(NOT_FOUND_USER_PROFILE);
-        }
-
-        return user;
+        return this.userRepository.findBy(field, value);
     }
 }

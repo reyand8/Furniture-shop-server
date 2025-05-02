@@ -19,16 +19,14 @@ const {
  *
  * @param entity - The entity to update
  * @param updateDto - The DTO containing fields to update
- * @param forbiddenFields - Array of field names that should not be updated
  */
-export function validateDtoFields<T>(
+export function updateEntityWithDto<T>(
     entity: T,
     updateDto: Partial<T>,
-    forbiddenFields: string[] = []
 ): T {
     const updatedEntity = { ...entity };
     for (const key in updateDto) {
-        if (updateDto[key] !== undefined && !forbiddenFields.includes(key)) {
+        if (updateDto[key] !== undefined) {
             updatedEntity[key] = updateDto[key];
         }
     }

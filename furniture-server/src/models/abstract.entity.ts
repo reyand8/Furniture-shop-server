@@ -1,11 +1,11 @@
 import {
-    PrimaryGeneratedColumn, CreateDateColumn,
-    UpdateDateColumn, BaseEntity, BeforeInsert
+    CreateDateColumn, UpdateDateColumn,
+    BaseEntity, BeforeInsert, PrimaryColumn
 } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 
 export abstract class AbstractEntity extends BaseEntity {
-    @PrimaryGeneratedColumn('uuid')
+    @PrimaryColumn('uuid')
     id: string;
 
     @CreateDateColumn()
