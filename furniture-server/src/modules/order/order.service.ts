@@ -157,9 +157,9 @@ export class OrderService {
         this.checkCreatedTime(order.createdAt);
 
         if (contactInfoId) {
-            const newContactInfo: ContactInfoEntity[] =
-                await this.userService.getContactInfo(contactInfoId)
-            order.contactInfo = newContactInfo[0];
+            const { contactInfo } =
+                await this.userService.getContactInfo(contactInfoId, {page: 1, pageSize: 10})
+            order.contactInfo = contactInfo[0];
         }
         const validatedDto: OrderEntity = updateEntityWithDto(order, updateOrderDto);
         return this.orderRepository.createAndSaveOrder(validatedDto);
