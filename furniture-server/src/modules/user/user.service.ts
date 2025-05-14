@@ -20,6 +20,8 @@ import { ContactInfoRepository } from './repository/contactInfo.repository';
 import { GetAllUsersDto } from './dto/getAllUsers.dto';
 import { UpdateUserFieldsDto } from './dto/updateUserFields.dto';
 import { IUserRegister } from '../auth/auth.interface';
+import { ContactInfoOrderCheckerService } from '../contact-info-order-checker/contact-info-order-checker.service';
+import { GetContactInfoQueryDto } from './dto/getContactInfoQuery.dto';
 
 
 const { NOT_FOUND_CONTACT_INFO, NOT_FOUND_USER_PROFILE } = ERROR_MESSAGES;
@@ -29,6 +31,7 @@ export class UserService {
     constructor(
         private readonly userRepository: UserRepository,
         private readonly contactInfoRepository: ContactInfoRepository,
+        private readonly contactInfoOrderChecker: ContactInfoOrderCheckerService,
     ) {}
 
     /**
@@ -109,16 +112,27 @@ export class UserService {
     }
 
     /**
-     * Retrieves contact information for a user based on userId.
+     * Retrieves paginated contact information for a user based on the userId.
      * Validates the provided user ID before querying the database.
      *
-     * Throws BadRequestException if the user ID is invalid.
+     * Throws a BadRequestException if the user ID is invalid or if no contact information is found.
      *
-     * @param userId - The ID of the user whose contact information is requested
-     * @returns A list of contact information associated with the user
+     * @param userId - The ID of the user whose contact information is requested.
+     * @param query - Query parameters including pagination settings (page and pageSize).
+     * @returns An object containing a list of contact information associated with the user and the total number of pages.
      */
-    async getContactInfo(userId: string): Promise<ContactInfoEntity[]> {
-        return this.contactInfoRepository.findAll(userId);
+    async getContactInfo(
+        userId: string,
+        query: GetContactInfoQueryDto
+    ): Promise<{ contactInfo: ContactInfoEntity[], totalPages: number }> {
+        const { page = 1, pageSize = 10 } = query;
+        const skip: number = (page - 1) * pageSize;
+        const [contactInfo, totalCount] = await this.contactInfoRepository.findAllPaginated(
+            userId,
+            skip,
+            pageSize
+        );
+        return { contactInfo, totalPages: Math.ceil(totalCount / pageSize) };
     }
 
     /**
@@ -187,23 +201,26 @@ export class UserService {
     }
 
     /**
-     * Deletes the contact information for a given contactInfoId and userId.
-     * Validates both the contactInfoId and userId before proceeding.
+     * Deletes a contact info record or marks it as inactive if it is associated with an order.
      *
-     * Throws BadRequestException if either ID is invalid.
-     * Throws NotFoundException if the contact information is not found for the user.
-     * Throws InternalServerErrorException if an error occurs during the deletion process.
+     * If the contact info is used in an existing order, it will be deactivated rather than removed.
      *
-     * @param contactInfoId - The ID of the contact information to delete
-     * @param userId - The ID of the user whose contact information is being deleted
+     * @param contactInfoId - The ID of the contact info to be deleted or deactivated.
+     * @param userId - The ID of the user who owns the contact info.
+     * @returns A promise that resolves to void.
      */
     async deleteContactInfo(
         contactInfoId: string,
         userId: string
     ): Promise<void> {
-        const contactInfo: ContactInfoEntity =
-            await this.getContactInfoByIdAndUser(contactInfoId, userId);
-        await this.contactInfoRepository.remove(contactInfo);
+        const contactInfo: ContactInfoEntity = await this.getContactInfoByIdAndUser(contactInfoId, userId);
+        const isOrderExist: boolean = await this.contactInfoOrderChecker.isContactInfoUsed(contactInfoId);
+        if (isOrderExist) {
+            contactInfo.isActive = false;
+            await this.contactInfoRepository.createAndUpdate(contactInfo);
+        } else {
+            await this.contactInfoRepository.remove(contactInfo);
+        }
     }
 
     /**

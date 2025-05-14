@@ -17,6 +17,7 @@ import { RolesGuard } from '../auth/roles-guard/roles.guard';
 import { GetAllUsersDto } from './dto/getAllUsers.dto';
 import { UpdateUserFieldsDto } from './dto/updateUserFields.dto';
 import { ErrorInterceptor } from '../../common/errorInterceptor';
+import { GetContactInfoQueryDto } from './dto/getContactInfoQuery.dto';
 
 
 @UseInterceptors(ErrorInterceptor)
@@ -86,14 +87,18 @@ export class UserController {
     }
 
     /**
-     * Get all contact information for the currently authenticated user.
-     * @param req The request object containing the current user's information.
-     * @returns An array of contact information.
+     * Get paginated contact information for the currently authenticated user.
+     * @param req The request object containing the current user's information (userId).
+     * @param query Query parameters for pagination, including page number and page size.
+     * @returns An object containing the paginated list of contact information and the total number of pages.
      */
     @Get('contact-info')
     @UseGuards(AuthGuard('jwt'))
-    async getContactInfo(@Request() req: any): Promise<ContactInfoEntity[]> {
-        return this.userService.getContactInfo(req.user.id);
+    async getContactInfo(
+        @Request() req: any,
+        @Query() query: GetContactInfoQueryDto
+    ): Promise<{ contactInfo: ContactInfoEntity[], totalPages: number }> {
+        return this.userService.getContactInfo(req.user.id, query);
     }
 
     /**
