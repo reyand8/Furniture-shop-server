@@ -1,4 +1,7 @@
-import { IsEmail, IsOptional, IsString, MaxLength } from 'class-validator';
+import {
+    IsBoolean, IsEmail,
+    IsOptional, IsString,
+    MaxLength } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 
@@ -21,4 +24,8 @@ export class UpdateUserDto {
     @IsOptional()
     @Transform(({ value }: { value: string }): string => value?.trim())
     lastName: string;
+
+    @IsOptional()
+    @IsBoolean({ message: 'User status must be true or false.' })
+    isActive: boolean;
 }
