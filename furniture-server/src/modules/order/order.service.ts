@@ -155,11 +155,9 @@ export class OrderService {
         const { contactInfoId } = updateOrderDto
         const order: OrderEntity = await this.findOneOrderByUserId(user.id, orderId);
         this.checkCreatedTime(order.createdAt);
-
         if (contactInfoId) {
-            const { contactInfo } =
-                await this.userService.getContactInfo(contactInfoId, {page: 1, pageSize: 10})
-            order.contactInfo = contactInfo[0];
+            order.contactInfo =
+                await this.userService.getContactInfoByIdAndUser(contactInfoId, user.id);
         }
         const validatedDto: OrderEntity = updateEntityWithDto(order, updateOrderDto);
         return this.orderRepository.createAndSaveOrder(validatedDto);
