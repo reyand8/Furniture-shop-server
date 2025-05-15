@@ -96,4 +96,19 @@ export class ContactInfoRepository {
     async remove(contactInfo: ContactInfoEntity): Promise<ContactInfoEntity> {
         return this.contactInfoRepo.remove(contactInfo);
     }
+
+    /**
+     * Checks if the given contact info is used in any existing order.
+     * Returns true if at least one order is linked to the provided contactInfoId.
+     *
+     * @param contactInfoId - The ID of the contact info to check.
+     * @returns A boolean indicating whether the contact info is used in any order.
+     */
+    async isContactInfoUsed(contactInfoId: string): Promise<boolean> {
+        return await this.contactInfoRepo
+            .createQueryBuilder('contactInfo')
+            .innerJoin('orders', 'order', 'order.contactInfoId = contactInfo.id')
+            .where('contactInfo.id = :contactInfoId', {contactInfoId})
+            .getExists();
+    }
 }

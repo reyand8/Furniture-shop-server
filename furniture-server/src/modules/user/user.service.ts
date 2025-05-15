@@ -20,7 +20,6 @@ import { ContactInfoRepository } from './repository/contactInfo.repository';
 import { GetAllUsersDto } from './dto/getAllUsers.dto';
 import { UpdateUserFieldsDto } from './dto/updateUserFields.dto';
 import { IUserRegister } from '../auth/auth.interface';
-import { ContactInfoOrderCheckerService } from '../contact-info-order-checker/contact-info-order-checker.service';
 import { GetContactInfoQueryDto } from './dto/getContactInfoQuery.dto';
 
 
@@ -31,7 +30,6 @@ export class UserService {
     constructor(
         private readonly userRepository: UserRepository,
         private readonly contactInfoRepository: ContactInfoRepository,
-        private readonly contactInfoOrderChecker: ContactInfoOrderCheckerService,
     ) {}
 
     /**
@@ -125,7 +123,7 @@ export class UserService {
         userId: string,
         query: GetContactInfoQueryDto
     ): Promise<{ contactInfo: ContactInfoEntity[], totalPages: number }> {
-        const { page = 1, pageSize = 10 } = query;
+        const { page, pageSize } = query;
         const skip: number = (page - 1) * pageSize;
         const [contactInfo, totalCount] = await this.contactInfoRepository.findAllPaginated(
             userId,
@@ -214,7 +212,7 @@ export class UserService {
         userId: string
     ): Promise<void> {
         const contactInfo: ContactInfoEntity = await this.getContactInfoByIdAndUser(contactInfoId, userId);
-        const isOrderExist: boolean = await this.contactInfoOrderChecker.isContactInfoUsed(contactInfoId);
+        const isOrderExist: boolean = await this.contactInfoRepository.isContactInfoUsed(contactInfoId);
         if (isOrderExist) {
             contactInfo.isActive = false;
             await this.contactInfoRepository.createAndUpdate(contactInfo);
