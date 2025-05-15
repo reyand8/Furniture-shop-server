@@ -18,8 +18,6 @@ import { ContactInfoRepository } from '../user/repository/contactInfo.repository
 import { ProductService } from '../product/product.service';
 import { CategoryRepository } from '../product/repository/category.repository';
 import { CategoryEntity } from '../../models/category/category.entity';
-import { ContactInfoOrderCheckerService }
-    from '../contact-info-order-checker/contact-info-order-checker.service';
 
 
 @Module({
@@ -45,7 +43,6 @@ import { ContactInfoOrderCheckerService }
         CategoryRepository,
         ProductRepository,
         OrderDetailsFactory,
-        ContactInfoOrderCheckerService
     ],
     exports: [OrderService],
 })

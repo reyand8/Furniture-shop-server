@@ -73,16 +73,4 @@ export class OrderRepository {
         const createOrder: OrderEntity = this.orderRepo.create(order);
         return this.orderRepo.save(createOrder);
     }
-
-    /**
-     * Retrieves a single order associated with a given contact info ID.
-     *
-     * @param contactInfoId - The ID of the contact info to retrieve the associated order.
-     * @returns A promise that resolves to the `OrderEntity` or `null` if no order is found.
-     */
-    async getOneOrderByContactInfo(contactInfoId: string): Promise<OrderEntity | null> {
-        return this.orderRepo.findOne({
-            where: { contactInfo: { id: contactInfoId } }
-        });
-    }
 }
