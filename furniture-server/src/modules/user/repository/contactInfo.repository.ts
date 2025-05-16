@@ -42,13 +42,29 @@ export class ContactInfoRepository {
     }
 
     /**
-     * Retrieves all contact info records associated with a given user ID.
+     * Retrieves a paginated list of active contact info records associated with a given user ID.
+     * The records are ordered by creation date in descending order.
      *
-     * @param userId - The ID of the user whose contact info should be retrieved.
-     * @returns A promise that resolves to an array of ContactInfoEntity.
+     * @param userId - The ID of the user whose contact info records should be retrieved.
+     * @param skip - The number of records to skip (for pagination).
+     * @param take - The number of records to retrieve (for pagination).
+     * @returns A promise that resolves to a tuple containing:
+     *  - An array of `ContactInfoEntity` records.
+     *  - The total number of contact info records available for the user.
      */
-    async findAll(userId: string): Promise<ContactInfoEntity[]> {
-        return this.contactInfoRepo.find({ where: { user: { id: userId } } });
+    async findAllPaginated(userId: string,
+                           skip: number,
+                           take: number
+    ): Promise<[ContactInfoEntity[], number]> {
+        return this.contactInfoRepo.findAndCount({
+            where: {
+                user: { id: userId },
+                isActive: true,
+            },
+            skip,
+            take,
+            order: { createdAt: 'DESC' },
+        });
     }
 
     /**
@@ -66,6 +82,7 @@ export class ContactInfoRepository {
             where: {
                 id: contactInfoId,
                 user: { id: userId },
+                isActive: true,
             },
         });
     }
@@ -78,5 +95,20 @@ export class ContactInfoRepository {
      */
     async remove(contactInfo: ContactInfoEntity): Promise<ContactInfoEntity> {
         return this.contactInfoRepo.remove(contactInfo);
+    }
+
+    /**
+     * Checks if the given contact info is used in any existing order.
+     * Returns true if at least one order is linked to the provided contactInfoId.
+     *
+     * @param contactInfoId - The ID of the contact info to check.
+     * @returns A boolean indicating whether the contact info is used in any order.
+     */
+    async isContactInfoUsed(contactInfoId: string): Promise<boolean> {
+        return await this.contactInfoRepo
+            .createQueryBuilder('contactInfo')
+            .innerJoin('orders', 'order', 'order.contactInfoId = contactInfo.id')
+            .where('contactInfo.id = :contactInfoId', {contactInfoId})
+            .getExists();
     }
 }

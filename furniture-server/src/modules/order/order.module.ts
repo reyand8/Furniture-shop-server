@@ -44,6 +44,7 @@ import { CategoryEntity } from '../../models/category/category.entity';
         ProductRepository,
         OrderDetailsFactory,
     ],
+    exports: [OrderService],
 })
 
 export class OrderModule {}

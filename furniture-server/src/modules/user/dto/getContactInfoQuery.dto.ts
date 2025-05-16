@@ -1,0 +1,17 @@
+import { IsOptional, IsNumber, Min } from 'class-validator';
+import { Type } from 'class-transformer';
+
+
+export class GetContactInfoQueryDto {
+    @IsOptional()
+    @Type((): NumberConstructor => Number)
+    @IsNumber()
+    @Min(1)
+    page: number = 1;
+
+    @IsOptional()
+    @Type((): NumberConstructor => Number)
+    @IsNumber()
+    @Min(1)
+    pageSize: number = 10;
+}

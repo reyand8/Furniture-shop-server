@@ -9,6 +9,7 @@ import { ContactInfoEntity } from '../../models/contact-info/contact-info.entity
 import { UserRepository } from './repository/user.repository';
 import { ContactInfoRepository } from './repository/contactInfo.repository';
 
+
 @Module({
     imports: [
         TypeOrmModule.forFeature([UserEntity, ContactInfoEntity]),

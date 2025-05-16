@@ -24,6 +24,9 @@ export class ContactInfoEntity extends AbstractEntity {
   @Column({ type:'varchar', nullable: false })
   country: string;
 
+  @Column({ nullable: false, default: true})
+  isActive: boolean;
+
   @Column({ type:'varchar', length: 100, nullable: true })
   companyName?: string;
 
