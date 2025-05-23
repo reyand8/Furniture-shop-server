@@ -142,9 +142,9 @@ export class ProductController {
      * @param {GetProductsByIdsDto} query - DTO containing an array of product IDs.
      * @returns {Promise<ProductEntity[] | null>} The list of matching products.
      */
-    @Get('products-by-ids')
+    @Post('products-by-ids')
     async getProductByIds(
-        @Query() query: GetProductsByIdsDto
+        @Body() query: GetProductsByIdsDto
     ): Promise<ProductEntity[] | null> {
         return this.productService.getProductByIds(query.ids);
     }
