@@ -40,6 +40,35 @@ export class OrderService {
     ) {}
 
     /**
+     * Removes sensitive user information from a single order.
+     * Keeps only id, firstName, lastName, and email fields in the user object.
+     *
+     * @param order - The order object containing a user.
+     * @returns The order with a filtered user object.
+     */
+    private filterUserFromOrder(order: OrderEntity): OrderEntity {
+        if (!order.user) return order;
+        const { id, firstName, lastName, email } = order.user;
+        const filteredUser = {
+            id, firstName, lastName, email,
+        };
+        return {
+            ...order,
+            user: filteredUser,
+        } as OrderEntity;
+    }
+
+    /**
+     * Applies user filtering to an array of orders.
+     *
+     * @param orders - An array of orders containing user objects.
+     * @returns An array of orders with filtered user objects.
+     */
+    private filterUsersFromOrders(orders: OrderEntity[]): OrderEntity[] {
+        return orders.map(order => this.filterUserFromOrder(order));
+    }
+
+    /**
      * Creates a new order using the provided order data and the authenticated user's information.
      * This method performs the following steps:
      * - Validates the input DTO.
@@ -55,7 +84,7 @@ export class OrderService {
     async create(createOrderDto: CreateOrderDto, user: UserEntity): Promise<OrderEntity> {
         validateDtoNotEmpty(createOrderDto);
 
-        const {contactInfoId, orderItems, paymentMethod, status, notes} = createOrderDto;
+        const { contactInfoId, orderItems, paymentMethod, status, notes } = createOrderDto;
 
         const contactInfo: ContactInfoEntity =
             await this.userService.getContactInfoByIdAndUser(contactInfoId, user.id);
@@ -64,17 +93,20 @@ export class OrderService {
 
         this.checkUnavailableProducts(selectedProducts);
 
-        const {details: orderDetails, total: totalAmount} =
+        const { details: orderDetails, total: totalAmount } =
             this.orderDetailsFactory.createDetails(orderItems, selectedProducts);
 
-        return this.orderRepository.createAndSaveOrder({
-            user, contactInfo,
+        const createdOrder = await this.orderRepository.createAndSaveOrder({
+            user,
+            contactInfo,
             orderItems: orderDetails,
             paymentMethod,
             status: status || OrderStatus.PENDING,
             totalAmount,
             notes,
         });
+
+        return this.filterUserFromOrder(createdOrder);
     }
 
     /**
@@ -85,8 +117,10 @@ export class OrderService {
      * @returns A promise that resolves to an array of OrderEntity objects.
      */
     async findAll(user: UserEntity): Promise<OrderEntity[]> {
-        return this.orderRepository.getAllOrders(user.id);
+        const orders = await this.orderRepository.getAllOrders(user.id);
+        return this.filterUsersFromOrders(orders);
     }
+
 
     /**
      * Retrieves a single order by its ID for the specified user.
@@ -98,15 +132,9 @@ export class OrderService {
      * @throws NotFoundException if the order is not found.
      */
     async findOneOrderByUserId(userId: string, orderId: string): Promise<OrderEntity> {
-        const order: OrderEntity | null =
-            await this.orderRepository.getOneOrderByUser(userId, orderId);
-        if (!order) {
-            throw new NotFoundException(NOT_FOUND_ORDER);
-        }
-        if (order.user) {
-            delete (order.user as Partial<UserEntity>).password;
-        }
-        return order;
+        const order: OrderEntity | null = await this.orderRepository.getOneOrderByUser(userId, orderId);
+        if (!order) throw new NotFoundException(NOT_FOUND_ORDER);
+        return this.filterUserFromOrder(order);
     }
 
     /**
