@@ -50,10 +50,7 @@ export class OrderService {
         if (!order.user) return order;
         const { id, firstName, lastName, email } = order.user;
         const filteredUser = {
-            id: id,
-            firstName: firstName,
-            lastName: lastName,
-            email: email,
+            id, firstName, lastName, email,
         };
         return {
             ...order,
