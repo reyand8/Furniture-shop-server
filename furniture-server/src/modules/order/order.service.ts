@@ -48,11 +48,12 @@ export class OrderService {
      */
     private filterUserFromOrder(order: OrderEntity): OrderEntity {
         if (!order.user) return order;
+        const { id, firstName, lastName, email } = order.user;
         const filteredUser = {
-            id: order.user.id,
-            firstName: order.user.firstName,
-            lastName: order.user.lastName,
-            email: order.user.email,
+            id: id,
+            firstName: firstName,
+            lastName: lastName,
+            email: email,
         };
         return {
             ...order,
