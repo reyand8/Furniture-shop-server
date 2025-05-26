@@ -18,6 +18,7 @@ import { Roles } from '../auth/roles-guard/roles.decorator';
 import { EUserRole } from '../../models/user/user.entity';
 import { RolesGuard } from '../auth/roles-guard/roles.guard';
 import { ErrorInterceptor } from '../../common/errorInterceptor';
+import { GetProductsByIdsDto } from './dto/getProductsByIds.dto';
 
 
 @UseInterceptors(ErrorInterceptor)
@@ -134,6 +135,18 @@ export class ProductController {
         @Param('uuid', new ParseUUIDPipe()) productId: string,
     ): Promise<ProductEntity | null> {
         return this.productService.getProductById(productId);
+    }
+
+    /**
+     * Retrieves multiple products by an array of IDs passed as query parameters.
+     * @param {GetProductsByIdsDto} query - DTO containing an array of product IDs.
+     * @returns {Promise<ProductEntity[] | null>} The list of matching products.
+     */
+    @Post('products-by-ids')
+    async getProductByIds(
+        @Body() query: GetProductsByIdsDto
+    ): Promise<ProductEntity[] | null> {
+        return this.productService.getProductByIds(query.ids);
     }
 
     /**
