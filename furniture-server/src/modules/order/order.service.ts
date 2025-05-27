@@ -21,6 +21,7 @@ import {
 import { ERROR_MESSAGES } from '../../common/constants';
 import { UserService } from '../user/user.service';
 import { ProductService } from '../product/product.service';
+import { IOrdersGroupedByStatus } from './interfaces/order.interface';
 
 
 const {
@@ -121,6 +122,29 @@ export class OrderService {
         return this.filterUsersFromOrders(orders);
     }
 
+    /**
+     * Retrieves all orders accessible to admins, filters out orders without users,
+     * and groups the remaining orders by their status.
+     *
+     * @returns {Promise<IOrdersGroupedByStatus>}
+     *   An object where each key is an OrderStatus and the value is an array
+     *   of orders with that status.
+     */
+    async findAllByAdmin(): Promise<IOrdersGroupedByStatus> {
+        const orders: OrderEntity[] = await this.orderRepository.getAllOrdersByAdmin();
+        const filteredOrders: OrderEntity[] = this.filterUsersFromOrders(orders);
+        const grouped: IOrdersGroupedByStatus = {};
+        for (const statusKey of Object.values(OrderStatus)) {
+            grouped[statusKey] = [];
+        }
+        for (const order of filteredOrders) {
+            const status: OrderStatus = order.status;
+            if (status && grouped[status]) {
+                grouped[status].push(order);
+            }
+        }
+        return grouped;
+    }
 
     /**
      * Retrieves a single order by its ID for the specified user.
@@ -202,9 +226,9 @@ export class OrderService {
     async checkProductsExist(orderItems: CreateOrderItemDto[]): Promise<ProductEntity[]> {
         const productIds: string[] =
             orderItems.map((item: CreateOrderItemDto): string => item.productId);
-
+        const isAdmin: boolean = false
         const selectedProducts: ProductEntity[] =
-            await this.productService.getProductByIds(productIds);
+            await this.productService.getProductByIds(productIds, isAdmin);
 
         const foundIds: Set<string> = new Set(
             selectedProducts.map((product: ProductEntity): string => product.id)

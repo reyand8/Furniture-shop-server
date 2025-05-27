@@ -30,6 +30,19 @@ export class OrderRepository {
     }
 
     /**
+     * Retrieves all orders, including related entities.
+     * Orders are returned in descending order by creation date.
+     *
+     * @returns An array of OrderEntity objects with related data
+     */
+    async getAllOrdersByAdmin(): Promise<OrderEntity[]> {
+        return this.orderRepo.find({
+            relations: ['orderItems', 'contactInfo', 'user'],
+            order: { createdAt: 'DESC' }
+        });
+    }
+
+    /**
      * Retrieves a specific order by its ID for a given user, including related entities.
      * Throws an error if the order is not found or does not belong to the user.
      *
