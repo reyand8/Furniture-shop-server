@@ -1,9 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-
-import { DeleteResult, Repository } from 'typeorm';
+import { Repository, FindOptionsWhere } from 'typeorm';
 import { CategoryEntity } from '../../../models/category/category.entity';
-
 
 @Injectable()
 export class CategoryRepository {
@@ -13,35 +11,41 @@ export class CategoryRepository {
     ) {}
 
     /**
-     * Retrieves all categories from the database.
-     * @returns A promise that resolves to an array of CategoryEntity objects.
+     * Retrieves all categories, optionally filtered by active status for non-admins.
+     * @param isAdmin - if true, returns all categories; otherwise only active ones.
      */
-    async findAll(): Promise<CategoryEntity[]> {
-        return this.categoryRepo.find();
+    async findAll(isAdmin: boolean): Promise<CategoryEntity[]> {
+        const whereCondition: FindOptionsWhere<CategoryEntity> = isAdmin ? {} : { isActive: true };
+        return this.categoryRepo.find({ where: whereCondition });
     }
 
     /**
-     * Finds a category by its unique ID.
-     * @param categoryId - The ID of the category.
-     * @returns A promise that resolves to a CategoryEntity or null if not found.
+     * Finds a category by ID. Non-admins get only active categories.
+     * @param categoryId - ID of the category.
+     * @param isAdmin - if true, returns category regardless of active status.
      */
-    async findById(categoryId: string): Promise<CategoryEntity | null> {
-        return this.categoryRepo.findOne({ where: { id: categoryId } });
+    async findById(categoryId: string, isAdmin: boolean): Promise<CategoryEntity | null> {
+        const whereCondition: FindOptionsWhere<CategoryEntity> = isAdmin
+            ? { id: categoryId }
+            : { id: categoryId, isActive: true };
+        return this.categoryRepo.findOne({ where: whereCondition });
     }
 
     /**
-     * Finds a category by its name.
-     * @param categoryName - The name of the category.
-     * @returns A promise that resolves to a CategoryEntity or null if not found.
+     * Finds a category by name. Non-admins get only active categories.
+     * @param categoryName - Name of the category.
+     * @param isAdmin - if true, returns category regardless of active status.
      */
-    async findByName(categoryName: string): Promise<CategoryEntity | null> {
-        return this.categoryRepo.findOne({ where: { name: categoryName } });
+    async findByName(categoryName: string, isAdmin: boolean): Promise<CategoryEntity | null> {
+        const whereCondition: FindOptionsWhere<CategoryEntity> = isAdmin
+            ? { name: categoryName }
+            : { name: categoryName, isActive: true };
+        return this.categoryRepo.findOne({ where: whereCondition });
     }
 
     /**
-     * Creates and saves a new category with the given name.
-     * @param categoryName - The name of the new category.
-     * @returns A promise that resolves to the created CategoryEntity.
+     * Creates and saves a new category.
+     * @param categoryName - Name of the new category.
      */
     async createCategory(categoryName: string): Promise<CategoryEntity> {
         const category: CategoryEntity = this.categoryRepo.create({ name: categoryName });
@@ -51,7 +55,6 @@ export class CategoryRepository {
     /**
      * Saves changes made to a category entity.
      * @param category - The category entity to save.
-     * @returns A promise that resolves to the updated CategoryEntity.
      */
     async save(category: CategoryEntity): Promise<CategoryEntity> {
         return this.categoryRepo.save(category);

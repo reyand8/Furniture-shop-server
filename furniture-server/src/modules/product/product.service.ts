@@ -40,23 +40,26 @@ export class ProductService {
 
     /**
      * Retrieves all categories from the database.
+     * If the user is not an admin, only active categories are returned.
      *
-     * @returns {Promise<CategoryEntity[]>} A list of all categories.
+     * @param isAdmin - Whether the requester has admin privileges.
+     * @returns {Promise<CategoryEntity[]>} A promise resolving to a list of categories.
      */
-    async getCategories(): Promise<CategoryEntity[]> {
-        return this.categoryRepository.findAll();
+    async getCategories(isAdmin: boolean): Promise<CategoryEntity[]> {
+        return this.categoryRepository.findAll(isAdmin);
     }
 
     /**
      * Retrieves a single category by its ID from the database.
+     * If the user is not an admin, only active categories can be retrieved.
      *
      * @param {string} categoryId - The ID of the category to retrieve.
-     * @returns {Promise<CategoryEntity>} The category with the specified ID.
-     * @throws {BadRequestException} If the provided ID is invalid.
+     * @param {boolean} isAdmin - Whether the requester has admin privileges.
+     * @returns {Promise<CategoryEntity>} A promise resolving to the category with the specified ID.
+     * @throws {NotFoundException} If no category is found with the given ID.
      */
-    async getCategory(categoryId: string): Promise<CategoryEntity> {
-        const category: CategoryEntity | null =
-            await this.categoryRepository.findById(categoryId);
+    async getCategory(categoryId: string, isAdmin: boolean): Promise<CategoryEntity> {
+        const category = await this.categoryRepository.findById(categoryId, isAdmin);
         if (!category) {
             throw new NotFoundException(NOT_FOUND_CATEGORY);
         }
@@ -64,17 +67,20 @@ export class ProductService {
     }
 
     /**
-     * Creates a new category.
+     * Creates a new category with the given name.
+     * Validates that the category name is provided and does not already exist.
      *
      * @param {string} categoryName - The name of the category to be created.
-     * @throws {BadRequestException} If the category name is missing.
+     * @returns {Promise<CategoryEntity>} A promise resolving to the newly created category entity.
+     *
+     * @throws {BadRequestException} If the category name is missing or already exists.
      */
     async createCategory(categoryName: string): Promise<CategoryEntity> {
         if (!categoryName) {
             throw new BadRequestException(REQUIRED_CATEGORY_NAME);
         }
-        const isCatExist: CategoryEntity | null
-            = await this.categoryRepository.findByName(categoryName);
+        const isAdmin = true;
+        const isCatExist = await this.categoryRepository.findByName(categoryName, isAdmin);
         if (isCatExist) {
             throw new BadRequestException(EXISTS_CATEGORY_NAME);
         }
@@ -94,8 +100,8 @@ export class ProductService {
         updateCategoryDto: UpdateCategoryDto
     ): Promise<CategoryEntity> {
         validateDtoNotEmpty(updateCategoryDto);
-        const category: CategoryEntity | null =
-            await this.categoryRepository.findById(categoryId);
+        const isAdmin = true;
+        const category = await this.categoryRepository.findById(categoryId, isAdmin);
         if (!category) {
             throw new NotFoundException(NOT_FOUND_CATEGORY);
         }
@@ -104,16 +110,16 @@ export class ProductService {
     }
 
     /**
-     * Retrieves a paginated list of products with optional filters for category and price range.
-     * Also calculates the total number of pages based on the total count of matched products.
+     * Retrieves paginated products based on filters.
      *
-     * @param getProductsQueryDto - DTO containing pagination and filter options
-     * @returns An object with the list of products and the total number of pages
+     * @param getProductsQueryDto - Filtering and pagination parameters.
+     * @param isAdmin - Admin status flag.
+     * @returns Products list and total page count.
      */
     async getProducts(
-        getProductsQueryDto: GetProductsQueryDto
+        getProductsQueryDto: GetProductsQueryDto,
+        isAdmin: boolean
     ): Promise<{ products: ProductEntity[], totalPages: number }> {
-
         const { minPrice, maxPrice, page = 1, pageSize = 10 } = getProductsQueryDto;
 
         validateProductFilters(page, pageSize, minPrice, maxPrice);
@@ -123,7 +129,7 @@ export class ProductService {
         const where: IWhereCondition =
             this.buildGetProductWhereCondition(getProductsQueryDto);
         const [products, totalCount] =
-            await this.productRepository.findPaginated(where, skipPage, pageSize);
+            await this.productRepository.findPaginated(where, skipPage, pageSize, isAdmin);
         return { products, totalPages: Math.ceil(totalCount / pageSize) };
     }
 
@@ -151,8 +157,9 @@ export class ProductService {
         updateProductDto: UpdateProductDto
     ): Promise<ProductEntity> {
         validateDtoNotEmpty(updateProductDto);
+        const isAdmin = true;
         const product: ProductEntity | null =
-            await this.productRepository.findById(productId)
+            await this.productRepository.findById(productId, isAdmin)
         if (!product) {
             throw new NotFoundException(NOT_FOUND_PRODUCT);
         }
@@ -161,14 +168,17 @@ export class ProductService {
     }
 
     /**
-     * Retrieves a product by its ID, including its category relation.
+     * Retrieves a product by its ID, including its category.
+     * Throws an error if the product is not found.
      *
-     * @param productId - The ID of the product to retrieve.
-     * @returns The product entity if found, or throws an error if not found.
+     * @param productId - ID of the product to retrieve.
+     * @param isAdmin - Whether the requester has admin privileges.
+     * @returns The found product entity.
+     * @throws BadRequestException if the product does not exist.
      */
-    async getProductById(productId: string): Promise<ProductEntity | null> {
+    async getProductById(productId: string, isAdmin: boolean): Promise<ProductEntity | null> {
         const product: ProductEntity | null =
-            await this.productRepository.findById(productId)
+            await this.productRepository.findById(productId, isAdmin)
         if (!product) {
             throw new BadRequestException(NOT_FOUND_PRODUCT);
         }
@@ -179,25 +189,28 @@ export class ProductService {
      * Retrieves products by their IDs.
      * Throws a BadRequestException if the input array is empty or undefined.
      *
-     * @param productIds - An array of product ID strings to search for.
-     * @returns A promise resolving to an array of matching ProductEntity objects.
+     * @param productIds - Array of product IDs to fetch.
+     * @param isAdmin - Flag indicating if the requester has admin privileges.
+     * @returns Promise resolving to an array of matching ProductEntity instances.
+     * @throws BadRequestException if productIds is empty or undefined.
      */
-    async getProductByIds(productIds: string[]): Promise<ProductEntity[]> {
+    async getProductByIds(productIds: string[], isAdmin: boolean): Promise<ProductEntity[]> {
         if (!productIds || productIds.length === 0) {
             throw new BadRequestException(NOT_FOUND_PRODUCT_IDS);
         }
-        return this.productRepository.findProductsByIds(productIds);
+        return this.productRepository.findProductsByIds(productIds, isAdmin);
     }
 
     /**
-     * Retrieves a list of products of the specified type, ordered by creation date.
+     * Retrieves products of the specified type, ordered by creation date.
      *
-     * @param productType - The product type to filter by.
-     * @returns A list of products of the specified type.
+     * @param productType - Type of products to retrieve.
+     * @param isAdmin - Whether the requester has admin privileges.
+     * @returns A promise resolving to an array of products matching the type.
      */
-    async getRelativeProducts(productType: ProductType): Promise<ProductEntity[]> {
+    async getRelativeProducts(productType: ProductType, isAdmin: boolean): Promise<ProductEntity[]> {
         validateProductType(productType);
-        return this.productRepository.findByType(productType)
+        return this.productRepository.findByType(productType, isAdmin)
     }
 
     /**
@@ -206,11 +219,11 @@ export class ProductService {
      * @param productName - The product name or part of it to search.
      * @returns A list of matching products.
      */
-    async searchProductByName(productName: string): Promise<ProductEntity[]> {
+    async searchProductByName(productName: string, isAdmin: boolean): Promise<ProductEntity[]> {
         if (!productName) {
             throw new BadRequestException(REQUIRED_PRODUCT_NAME);
         }
-        return this.productRepository.searchByName(productName);
+        return this.productRepository.searchByName(productName, isAdmin);
     }
 
     /**
@@ -218,8 +231,8 @@ export class ProductService {
      *
      * @returns A list of best-selling products.
      */
-    async getTopSellerProducts(): Promise<ProductEntity[]> {
-        return await this.productRepository.findTopSellers();
+    async getTopSellerProducts(isAdmin: boolean): Promise<ProductEntity[]> {
+        return await this.productRepository.findTopSellers(isAdmin);
     }
 
     /**

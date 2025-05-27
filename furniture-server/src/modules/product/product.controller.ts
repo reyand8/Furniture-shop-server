@@ -1,7 +1,7 @@
 import {
     Body, Controller, Get,
     Param, ParseUUIDPipe, Post,
-    Put, Query, UseGuards,
+    Put, Query, Req, UseGuards,
     UseInterceptors
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -19,6 +19,8 @@ import { EUserRole } from '../../models/user/user.entity';
 import { RolesGuard } from '../auth/roles-guard/roles.guard';
 import { ErrorInterceptor } from '../../common/errorInterceptor';
 import { GetProductsByIdsDto } from './dto/getProductsByIds.dto';
+import { isAdminRole } from '../../common/auth.utils';
+import { OptionalJwtAuthGuard } from '../auth/auth-guard/optional.auth.guard';
 
 
 @UseInterceptors(ErrorInterceptor)
@@ -27,23 +29,36 @@ export class ProductController {
     constructor(private readonly productService: ProductService ) {}
 
     /**
-     * Retrieves all categories.
-     * @returns {Promise<CategoryEntity[]>} List of all categories.
+     * Retrieves a list of all product categories.
+     * If the user is an admin, additional or hidden categories may be included.
+     *
+     * @param req - The incoming request object, optionally containing the authenticated user.
+     * @returns {Promise<CategoryEntity[]>} A promise that resolves to the list of categories.
      */
     @Get('categories')
-    async getCategories(): Promise<CategoryEntity[]> {
-        return this.productService.getCategories();
+    @UseGuards(OptionalJwtAuthGuard)
+    async getCategories(@Req() req): Promise<CategoryEntity[]> {
+        const isAdmin: boolean = isAdminRole(req.user?.role);
+        return this.productService.getCategories(isAdmin);
     }
 
     /**
-     * Retrieves single category by id.
-     * @returns {Promise<CategoryEntity>} Selected category.
+     * Retrieves a single category by its UUID.
+     * If the user is an admin, additional category details may be included.
+     *
+     * @param categoryId - UUID of the category to retrieve.
+     * @param req - The incoming request object, optionally containing the authenticated user.
+     * @returns {Promise<CategoryEntity>} A promise that resolves to the selected category.
      */
     @Get('category/:uuid')
+    @UseGuards(OptionalJwtAuthGuard)
     async getCategory(
-        @Param('uuid', new ParseUUIDPipe()) categoryId: string
+        @Param('uuid', new ParseUUIDPipe(),)
+        categoryId: string,
+        @Req() req,
     ): Promise<CategoryEntity> {
-        return this.productService.getCategory(categoryId);
+        const isAdmin: boolean = isAdminRole(req.user?.role);
+        return this.productService.getCategory(categoryId, isAdmin);
     }
 
     /**
@@ -89,10 +104,13 @@ export class ProductController {
      * A list of products and the total number of pages based on the filters.
      */
     @Get('products')
+    @UseGuards(OptionalJwtAuthGuard)
     async getProducts(
-        @Query() query: GetProductsQueryDto
+        @Query() query: GetProductsQueryDto,
+        @Req() req,
     ): Promise<{ products: ProductEntity[], totalPages: number }> {
-        return this.productService.getProducts(query);
+        const isAdmin: boolean = isAdminRole(req.user?.role);
+        return this.productService.getProducts(query, isAdmin);
     }
 
     /**
@@ -131,22 +149,27 @@ export class ProductController {
      * @returns {Promise<ProductEntity | null>} The requested product.
      */
     @Get('product/:uuid')
+    @UseGuards(OptionalJwtAuthGuard)
     async getProduct(
         @Param('uuid', new ParseUUIDPipe()) productId: string,
+        @Req() req,
     ): Promise<ProductEntity | null> {
-        return this.productService.getProductById(productId);
+        const isAdmin: boolean = isAdminRole(req.user?.role);
+        return this.productService.getProductById(productId, isAdmin);
     }
-
     /**
      * Retrieves multiple products by an array of IDs passed as query parameters.
      * @param {GetProductsByIdsDto} query - DTO containing an array of product IDs.
      * @returns {Promise<ProductEntity[] | null>} The list of matching products.
      */
     @Post('products-by-ids')
+    @UseGuards(OptionalJwtAuthGuard)
     async getProductByIds(
-        @Body() query: GetProductsByIdsDto
+        @Body() query: GetProductsByIdsDto,
+        @Req() req,
     ): Promise<ProductEntity[] | null> {
-        return this.productService.getProductByIds(query.ids);
+        const isAdmin: boolean = isAdminRole(req.user?.role);
+        return this.productService.getProductByIds(query.ids, isAdmin);
     }
 
     /**
@@ -155,10 +178,13 @@ export class ProductController {
      * @returns {Promise<ProductEntity[]>} List of related products.
      */
     @Get('relative-products')
+    @UseGuards(OptionalJwtAuthGuard)
     async getRelativeProducts(
-        @Query('type') type: ProductType
+        @Query('type') type: ProductType,
+        @Req() req,
     ): Promise<ProductEntity[]> {
-        return this.productService.getRelativeProducts(type);
+        const isAdmin: boolean = isAdminRole(req.user?.role);
+        return this.productService.getRelativeProducts(type, isAdmin);
     }
 
     /**
@@ -167,10 +193,13 @@ export class ProductController {
      * @returns {Promise<ProductEntity[]>} List of products matching the search term.
      */
     @Get('search')
+    @UseGuards(OptionalJwtAuthGuard)
     async searchProductByName(
-        @Query('name') name: string
+        @Query('name') name: string,
+        @Req() req,
     ): Promise<ProductEntity[]> {
-        return this.productService.searchProductByName(name);
+        const isAdmin: boolean = isAdminRole(req.user?.role);
+        return this.productService.searchProductByName(name, isAdmin);
     }
 
     /**
@@ -178,7 +207,9 @@ export class ProductController {
      * @returns {Promise<ProductEntity[]>} List of top-selling products.
      */
     @Get('top-products')
-    async getTopProducts(): Promise<ProductEntity[]> {
-        return this.productService.getTopSellerProducts();
+    @UseGuards(OptionalJwtAuthGuard)
+    async getTopProducts(@Req() req): Promise<ProductEntity[]> {
+        const isAdmin: boolean = isAdminRole(req.user?.role);
+        return this.productService.getTopSellerProducts(isAdmin);
     }
 }
