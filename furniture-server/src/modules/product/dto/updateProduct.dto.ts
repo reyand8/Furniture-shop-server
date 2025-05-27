@@ -3,6 +3,8 @@ import {
     IsString, MaxLength, Min
 } from 'class-validator';
 
+import { ProductType } from '../../../models/product/product.entity';
+
 
 export class UpdateProductDto {
     @IsOptional()
@@ -35,9 +37,8 @@ export class UpdateProductDto {
     images: string[];
 
     @IsOptional()
-    @IsArray({ message: 'Sizes list must be an array.' })
     @IsString({ each: true, message: 'Each size must be a string.' })
-    sizes: string[];
+    size: string;
 
     @IsOptional()
     @IsBoolean({ message: 'isAvailable status must be true or false.' })
@@ -46,4 +47,22 @@ export class UpdateProductDto {
     @IsOptional()
     @IsBoolean({ message: 'isActive status must be true or false.' })
     isActive: boolean;
+
+    @IsOptional()
+    @IsBoolean({ message: 'isActive status must be true or false.' })
+    isBestSeller: boolean;
+
+    @IsOptional()
+    @IsString({ message: 'Category id must be a string.' })
+    categoryId: boolean;
+
+    @IsOptional()
+    @IsString({ message: 'Color must be a string.' })
+    color: string;
+
+    @IsOptional()
+    @IsString({
+        message:
+            `Product type must be a string. Valid values: ${Object.values(ProductType).join(', ')}` })
+    type: ProductType;
 }
