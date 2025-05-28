@@ -15,6 +15,7 @@ export class CreateProductDto {
     @IsString({ message: 'Description must be a string.' })
     @MaxLength(500, { message: 'Description must be at most 500 characters.' })
     description: string;
+
     @IsString({
         message:
             `Product type must be a string. Valid values: ${Object.values(ProductType).join(', ')}` })
@@ -38,6 +39,10 @@ export class CreateProductDto {
 
     @IsString({ message: 'Each size must be a string.' })
     size: string;
+
+    @IsOptional()
+    @IsString({ message: 'Color must be a string.' })
+    color: string;
 
     @IsOptional()
     @IsBoolean({ message: 'isAvailable status must be true or false.' })

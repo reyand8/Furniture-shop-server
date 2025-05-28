@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeleteResult, ILike, In, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 
 import { ProductEntity, ProductType } from '../../../models/product/product.entity';
 import { IWhereCondition } from '../product.interface';
@@ -15,24 +15,35 @@ export class ProductRepository {
     ) {}
 
     /**
-     * Retrieves paginated products with filtering and relations.
-     * @param where - Filtering conditions.
-     * @param skip - Number of records to skip.
-     * @param take - Number of records to return.
-     * @returns A promise resolving to a tuple of products and total count.
+     * Retrieves a paginated list of products with optional filtering and category relation.
+     * If the user is not an admin, only active products and categories are included.
+     *
+     * @param where - Filtering conditions to apply to the query.
+     * @param skip - Number of records to skip (for pagination).
+     * @param take - Number of records to return (for pagination).
+     * @param isAdmin - Whether the requester has admin privileges.
+     * @returns A promise resolving to a tuple: [list of products, total count].
      */
     async findPaginated(
         where: IWhereCondition,
         skip: number,
         take: number,
+        isAdmin: boolean,
     ): Promise<[ProductEntity[], number]> {
-        return this.productRepo.findAndCount({
-            where,
-            relations: ['category'],
-            skip,
-            take,
-            order: { createdAt: 'DESC' },
-        });
+        const query = this.productRepo
+            .createQueryBuilder('product')
+            .leftJoinAndSelect('product.category', 'category')
+            .where(where)
+            .orderBy('product.createdAt', 'DESC')
+            .skip(skip)
+            .take(take);
+
+        if (!isAdmin) {
+            query.andWhere('product.isActive = true')
+                .andWhere('category.isActive = true');
+        }
+        const [products, count] = await query.getManyAndCount();
+        return [products, count];
     }
 
     /**
@@ -49,15 +60,23 @@ export class ProductRepository {
     }
 
     /**
-     * Finds a product by its ID.
-     * @param productId - The ID of the product.
-     * @returns A promise resolving to the ProductEntity or null if not found.
+     * Finds a product by its ID, including its category relation.
+     * If the user is not an admin, only active products and categories are considered.
+     *
+     * @param productId - The ID of the product to retrieve.
+     * @param isAdmin - Whether the requester has admin privileges.
+     * @returns A promise resolving to the ProductEntity if found, or null otherwise.
      */
-    async findById(productId: string): Promise<ProductEntity | null> {
-        return this.productRepo.findOne({
-            where: { id: productId },
-            relations: ['category'],
-        });
+    async findById(productId: string, isAdmin: boolean): Promise<ProductEntity | null> {
+        const query = this.productRepo
+            .createQueryBuilder('product')
+            .leftJoinAndSelect('product.category', 'category')
+            .where('product.id = :id', { id: productId });
+        if (!isAdmin) {
+            query.andWhere('product.isActive = true')
+                .andWhere('category.isActive = true');
+        }
+        return query.getOne();
     }
 
     /**
@@ -70,50 +89,71 @@ export class ProductRepository {
     }
 
     /**
-     * Finds products by their type.
-     * @param type - The type of the products.
-     * @returns A promise resolving to an array of ProductEntity.
+     * Retrieves all products of a specific type.
+     * If the user is not an admin, only active products and categories are returned.
+     *
+     * @param type - The type of products to retrieve.
+     * @param isAdmin - Whether the requester has admin privileges.
+     * @returns A promise resolving to an array of ProductEntity objects matching the type.
      */
-    async findByType(type: ProductType): Promise<ProductEntity[]> {
-        return this.productRepo.find({
-            where: { type },
-            relations: ['category'],
-            order: { createdAt: 'DESC' },
-        });
+    async findByType(type: ProductType, isAdmin: boolean): Promise<ProductEntity[]> {
+        const query = this.productRepo.createQueryBuilder('product')
+            .leftJoinAndSelect('product.category', 'category')
+            .where('product.type = :type', { type });
+        if (!isAdmin) {
+            query.andWhere('product.isActive = true')
+                .andWhere('category.isActive = true');
+        }
+        return query.orderBy('product.createdAt', 'DESC').getMany();
     }
 
     /**
      * Searches for products by name using a case-insensitive match.
      * @param productName - The name to search for.
+     * @param isAdmin - Whether the requester is an admin.
      * @returns A promise resolving to an array of ProductEntity.
      */
-    async searchByName(productName: string): Promise<ProductEntity[]> {
-        return this.productRepo.find({
-            where: { name: ILike(`%${productName}%`) },
-            relations: ['category'],
-        });
+    async searchByName(productName: string, isAdmin: boolean): Promise<ProductEntity[]> {
+        const query = this.productRepo.createQueryBuilder('product')
+            .leftJoinAndSelect('product.category', 'category')
+            .where('product.name ILIKE :name', { name: `%${productName}%` });
+        if (!isAdmin) {
+            query.andWhere('product.isActive = true')
+                .andWhere('category.isActive = true');
+        }
+        return query.orderBy('product.createdAt', 'DESC').getMany();
     }
 
     /**
-     * Retrieves products marked as bestsellers.
+     * Retrieves top-selling products.
+     * @param isAdmin - Whether the requester is an admin.
      * @returns A promise resolving to an array of ProductEntity.
      */
-    async findTopSellers(): Promise<ProductEntity[]> {
-        return this.productRepo.find({
-            where: { isBestSeller: true },
-            relations: ['category'],
-            order: { createdAt: 'DESC' },
-        });
+    async findTopSellers(isAdmin: boolean): Promise<ProductEntity[]> {
+        const query = this.productRepo.createQueryBuilder('product')
+            .leftJoinAndSelect('product.category', 'category')
+            .where('product.isBestSeller = true');
+        if (!isAdmin) {
+            query.andWhere('product.isActive = true')
+                .andWhere('category.isActive = true');
+        }
+        return query.orderBy('product.createdAt', 'DESC').getMany();
     }
 
     /**
      * Retrieves products by their IDs.
      * @param productIds - An array of product IDs to find.
+     * @param isAdmin - Whether the requester is an admin.
      * @returns A promise that resolves to an array of found ProductEntity objects.
      */
-    async findProductsByIds(productIds: string[]): Promise<ProductEntity[]> {
-        return this.productRepo.find({
-            where: { id: In(productIds)}
-        });
+    async findProductsByIds(productIds: string[], isAdmin: boolean): Promise<ProductEntity[]> {
+        const query = this.productRepo.createQueryBuilder('product')
+            .leftJoinAndSelect('product.category', 'category')
+            .whereInIds(productIds);
+        if (!isAdmin) {
+            query.andWhere('product.isActive = true')
+                .andWhere('category.isActive = true');
+        }
+        return query.getMany();
     }
 }

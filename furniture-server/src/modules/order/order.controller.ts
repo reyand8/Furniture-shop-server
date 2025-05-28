@@ -14,6 +14,7 @@ import { Roles } from '../auth/roles-guard/roles.decorator';
 import { EUserRole } from '../../models/user/user.entity';
 import { RolesGuard } from '../auth/roles-guard/roles.guard';
 import { ErrorInterceptor } from '../../common/errorInterceptor';
+import { IOrdersGroupedByStatus } from './interfaces/order.interface';
 
 
 @UseInterceptors(ErrorInterceptor)
@@ -49,6 +50,19 @@ export class OrderController {
     @UseGuards(AuthGuard('jwt'))
     async findAll(@Request() req: any): Promise<OrderEntity[]> {
         return this.orderService.findAll(req.user);
+    }
+
+    /**
+     * Retrieves all orders grouped by user for admin users.
+     * Requires JWT authentication and admin roles (SUPER_ADMIN, ADMIN).
+     *
+     * @returns A promise that resolves to an array of grouped orders by user.
+     */
+    @Get('admin')
+    @Roles(EUserRole.SUPER_ADMIN, EUserRole.ADMIN)
+    @UseGuards(AuthGuard('jwt'))
+    async findAllByAdmin(): Promise<IOrdersGroupedByStatus> {
+        return this.orderService.findAllByAdmin();
     }
 
     /**
