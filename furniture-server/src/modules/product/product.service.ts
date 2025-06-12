@@ -9,7 +9,6 @@ import { ERROR_MESSAGES } from '../../common/constants';
 import {
     updateEntityWithDto,
     validateDtoNotEmpty,
-    validateProductFilters,
     validateProductType
 } from '../../common/validation';
 import { UpdateCategoryDto } from './dto/updateCategory.dto';
@@ -120,9 +119,7 @@ export class ProductService {
         getProductsQueryDto: GetProductsQueryDto,
         isAdmin: boolean
     ): Promise<{ products: ProductEntity[], totalPages: number }> {
-        const { minPrice, maxPrice, page = 1, pageSize = 10 } = getProductsQueryDto;
-
-        validateProductFilters(page, pageSize, minPrice, maxPrice);
+        const { page = 1, pageSize = 10 } = getProductsQueryDto;
 
         const skipPage: number = (page - 1) * pageSize;
 
