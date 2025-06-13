@@ -212,9 +212,12 @@ export class ProductService {
 
     /**
      * Searches for products by name using a case-insensitive partial match.
+     * Throws an error if no product name is provided.
      *
-     * @param productName - The product name or part of it to search.
-     * @returns A list of matching products.
+     * @param productName - The product name or a part of it to search for.
+     * @param isAdmin - Whether the requester is an admin (may affect filtering or visibility).
+     * @returns A promise resolving to a list of matching products.
+     * @throws BadRequestException if the product name is empty.
      */
     async searchProductByName(productName: string, isAdmin: boolean): Promise<ProductEntity[]> {
         if (!productName) {
@@ -249,11 +252,11 @@ export class ProductService {
         if (category) {
             where.category = { id: category };
         }
-        if (minPrice !== undefined && maxPrice !== undefined) {
+        if (typeof minPrice === 'number' && typeof maxPrice === 'number') {
             where.price = Between(minPrice, maxPrice);
-        } else if (minPrice !== undefined) {
+        } else if (typeof minPrice === 'number') {
             where.price = MoreThanOrEqual(minPrice);
-        } else if (maxPrice !== undefined) {
+        } else if (typeof maxPrice === 'number') {
             where.price = LessThanOrEqual(maxPrice);
         }
         return where;
