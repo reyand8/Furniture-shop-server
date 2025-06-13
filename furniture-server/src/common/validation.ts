@@ -8,9 +8,6 @@ const {
     REQUIRED_PRODUCT_TYPE,
     NOT_FOUND_DTO,
     INVALID_PRODUCT_TYPE,
-    INVALID_PAGE,
-    INVALID_PAGE_SIZE,
-    PAGE_GREATER_THAN_SIZE,
 } = ERROR_MESSAGES
 
 /**
@@ -61,63 +58,5 @@ export function validateProductType(type: string): void {
     }
     if (!Object.values(ProductType).includes(type as ProductType)) {
         throw new BadRequestException(INVALID_PRODUCT_TYPE);
-    }
-}
-
-/**
- * Validates filters for product queries, including price range and pagination.
- *
- * @param page - The current page number.
- * @param pageSize - The number of items per page.
- * @param minPrice - Optional minimum price.
- * @param maxPrice - Optional maximum price.
- */
-export function validateProductFilters(
-    page: number,
-    pageSize: number,
-    minPrice?: number,
-    maxPrice?: number,
-): void {
-    if (minPrice !== undefined) {
-        validatePrice('minPrice', minPrice);
-    }
-    if (maxPrice !== undefined) {
-        validatePrice('maxPrice', maxPrice);
-    }
-    validatePages(page, pageSize);
-}
-
-/**
- * Validates a given price value.
- * Ensures it is a non-negative number.
- *
- * @param type - The name of the price field (e.g., "minPrice").
- * @param value - The price value to validate.
- */
-export function validatePrice(type: string, value: number): void {
-    if (isNaN(value)) {
-        throw new BadRequestException(`${type} must be a number`);
-    }
-    if (value < 0) {
-        throw new BadRequestException(`${type} cannot be negative`);
-    }
-}
-
-/**
- * Validates pagination parameters.
- * Ensures both page and pageSize are greater than 0, and page is not greater than pageSize.
- *
- * @param page - The current page number.
- * @param pageSize - The number of items per page.
- */
-export function validatePages(page: number, pageSize: number): void {
-    if (page < 1) {
-        throw new BadRequestException(INVALID_PAGE);
-    }
-    if (pageSize < 1) {
-        throw new BadRequestException(INVALID_PAGE_SIZE);
-    }
-    if (page > pageSize) {
-        throw new BadRequestException(PAGE_GREATER_THAN_SIZE);
     }
 }
